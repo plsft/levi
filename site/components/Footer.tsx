@@ -110,7 +110,7 @@ export function Footer() {
             <ul className="space-y-2">
               <li>
                 <a
-                  href="https://github.com/flarefound/levi"
+                  href="https://github.com/plsft/levi"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-sm text-denim-400 hover:text-wash-400 transition-colors"

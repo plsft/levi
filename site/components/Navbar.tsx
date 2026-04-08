@@ -48,7 +48,7 @@ export function Navbar() {
             <div className="w-px h-6 bg-denim-700 mx-2" />
 
             <a
-              href="https://github.com/flarefound/levi"
+              href="https://github.com/plsft/levi"
               target="_blank"
               rel="noopener noreferrer"
               className="px-4 py-2 rounded-md text-sm font-medium text-denim-300 hover:text-denim-100 hover:bg-denim-800/40 transition-colors"

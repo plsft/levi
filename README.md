@@ -10,7 +10,7 @@ Levi does **not** replace Wrangler. It orchestrates it.
 npm install -D @flarefound/levi
 ```
 
-**[Docs](https://levi.flarefound.com)** | **[Getting Started](https://levi.flarefound.com/getting-started)** | **[Examples](https://levi.flarefound.com/examples)** | **[GitHub](https://github.com/flarefound/levi)**
+**[Docs](https://levi.flarefound.com)** | **[Getting Started](https://levi.flarefound.com/getting-started)** | **[Examples](https://levi.flarefound.com/examples)** | **[GitHub](https://github.com/plsft/levi)**
 
 ---
 

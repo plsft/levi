@@ -212,7 +212,7 @@ export default function DocsIndex() {
         <p>
           Levi is open source.{" "}
           <a
-            href="https://github.com/flarefound/levi"
+            href="https://github.com/plsft/levi"
             target="_blank"
             rel="noopener noreferrer"
             className="text-wash-400 hover:text-wash-300"
@@ -221,7 +221,7 @@ export default function DocsIndex() {
           </a>{" "}
           or{" "}
           <a
-            href="https://github.com/flarefound/levi/issues"
+            href="https://github.com/plsft/levi/issues"
             target="_blank"
             rel="noopener noreferrer"
             className="text-wash-400 hover:text-wash-300"

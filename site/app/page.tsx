@@ -100,7 +100,7 @@ export default function HomePage() {
               Get Started
             </Link>
             <a
-              href="https://github.com/flarefound/levi"
+              href="https://github.com/plsft/levi"
               target="_blank"
               rel="noopener noreferrer"
               className="px-8 py-3 rounded-lg font-semibold text-denim-200 bg-denim-800/60 hover:bg-denim-700/60 transition-colors border border-denim-600 text-sm"

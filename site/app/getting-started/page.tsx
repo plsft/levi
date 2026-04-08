@@ -695,7 +695,7 @@ export default function GettingStartedPage() {
       <p className="text-sm text-denim-400">
         Found an issue with this guide?{" "}
         <a
-          href="https://github.com/flarefound/levi/issues"
+          href="https://github.com/plsft/levi/issues"
           target="_blank"
           rel="noopener noreferrer"
         >
