@@ -1,0 +1,73 @@
+{
+  "name": "@flarefound/levi",
+  "version": "0.1.0",
+  "description": "The Cloudflare AppHost Framework — Aspire for Cloudflare",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "bin": {
+    "levi": "./bin/levi.js"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./types": {
+      "types": "./dist/types/index.d.ts",
+      "import": "./dist/types/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "bin",
+    "templates"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "dev": "tsc -p tsconfig.build.json --watch",
+    "prepublishOnly": "npm run build",
+    "lint": "tsc --noEmit"
+  },
+  "keywords": [
+    "cloudflare",
+    "workers",
+    "wrangler",
+    "apphost",
+    "orchestration",
+    "d1",
+    "kv",
+    "r2",
+    "durable-objects",
+    "vinext"
+  ],
+  "author": "FlareFound <hello@flarefound.com>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/flarefound/levi"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "citty": "^0.1.6",
+    "consola": "^3.4.0",
+    "defu": "^6.1.4",
+    "jiti": "^2.4.2",
+    "jsonc-parser": "^3.3.1",
+    "pkg-types": "^1.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.7.0"
+  },
+  "peerDependencies": {
+    "wrangler": ">=3.0.0"
+  },
+  "peerDependenciesMeta": {
+    "wrangler": {
+      "optional": true
+    }
+  }
+}

@@ -1,0 +1,558 @@
+import type { WranglerConfig, WorkerOptions } from "../types/index.js";
+import type { CloudflareApp } from "../app.js";
+import { ServiceBindingRef } from "../resources/base.js";
+import { WorkerResource } from "../resources/worker.js";
+import { D1Resource } from "../resources/d1.js";
+import { KVResource } from "../resources/kv.js";
+import { R2Resource } from "../resources/r2.js";
+import { QueueResource } from "../resources/queue.js";
+import { DurableObjectResource } from "../resources/durable-object.js";
+import { VectorizeResource } from "../resources/vectorize.js";
+import { HyperdriveResource } from "../resources/hyperdrive.js";
+import { WorkersAIResource, AIGatewayResource } from "../resources/ai.js";
+import { MTLSResource } from "../resources/mtls.js";
+import { WorkflowResource } from "../resources/workflow.js";
+
+/**
+ * Generates valid `wrangler.jsonc` content from the Levi app graph.
+ *
+ * Each worker in the graph gets its own fully resolved wrangler config.
+ * The generator inspects every binding attached to the worker and emits
+ * the correct wrangler binding section (d1_databases, kv_namespaces,
+ * services, etc.).
+ *
+ * @example
+ * ```ts
+ * const gen = new WranglerGenerator(app);
+ * const configs = gen.generateAll();
+ *
+ * for (const [name, config] of configs) {
+ *   const content = WranglerGenerator.serialize(config);
+ *   await writeOutput(`.levi/workers/${name}/wrangler.jsonc`, content);
+ * }
+ * ```
+ */
+export class WranglerGenerator {
+  constructor(private app: CloudflareApp) {}
+
+  // ─── Public API ──────────────────────────────────────────────
+
+  /**
+   * Generate a complete wrangler config for a single worker.
+   */
+  generateForWorker(worker: WorkerResource): WranglerConfig {
+    const opts = worker.options;
+    const appOpts = this.app.options;
+
+    // Start with the base config
+    const config: WranglerConfig = {
+      name: worker.name,
+    };
+
+    // Entry point
+    if (opts.entrypoint) {
+      config.main = opts.entrypoint;
+    }
+
+    // Account ID
+    if (appOpts.account) {
+      config.account_id = appOpts.account;
+    }
+
+    // Compatibility — worker overrides app-level
+    config.compatibility_date =
+      opts.compatibilityDate ?? appOpts.compatibility_date;
+    if (opts.compatibilityFlags ?? appOpts.compatibility_flags) {
+      config.compatibility_flags =
+        opts.compatibilityFlags ?? appOpts.compatibility_flags;
+    }
+
+    // Process bindings
+    this.processBindings(config, opts);
+
+    // Queue consumers (separate from bindings — attached to worker)
+    this.processConsumers(config, opts);
+
+    // Routes
+    if (opts.routes && opts.routes.length > 0) {
+      config.routes = opts.routes;
+    }
+
+    // Cron triggers
+    if (opts.crons && opts.crons.length > 0) {
+      config.triggers = {
+        crons: opts.crons.map((c) => c.pattern),
+      };
+    }
+
+    // Placement
+    if (opts.placement) {
+      config.placement = opts.placement;
+    }
+
+    // Limits
+    if (opts.limits) {
+      config.limits = {};
+      if (opts.limits.cpuMs !== undefined) {
+        config.limits.cpu_ms = opts.limits.cpuMs;
+      }
+      if (opts.limits.memoryMb !== undefined) {
+        config.limits.memory_mb = opts.limits.memoryMb;
+      }
+    }
+
+    // Logpush
+    if (opts.logpush !== undefined) {
+      config.logpush = opts.logpush;
+    }
+
+    // Observability
+    if (opts.observability) {
+      config.observability = {
+        enabled: opts.observability.enabled,
+      };
+      if (opts.observability.headSamplingRate !== undefined) {
+        config.observability.head_sampling_rate =
+          opts.observability.headSamplingRate;
+      }
+    }
+
+    // Build
+    if (opts.build) {
+      config.build = {};
+      if (opts.build.command) config.build.command = opts.build.command;
+      if (opts.build.cwd) config.build.cwd = opts.build.cwd;
+      if (opts.build.watchDir) config.build.watch_dir = opts.build.watchDir;
+    }
+
+    // App-level vars
+    this.processAppVars(config);
+
+    // App-level secrets
+    this.processAppSecrets(config);
+
+    // vinext framework detection
+    if (worker.isVinext()) {
+      this.applyVinextDefaults(config, opts);
+    }
+
+    // Escape hatch: merge raw wrangler overrides last so they win
+    if (opts.wrangler) {
+      this.mergeEscapeHatch(config, opts.wrangler);
+    }
+
+    return config;
+  }
+
+  /**
+   * Generate wrangler configs for every worker in the app graph.
+   *
+   * @returns A map of worker name -> generated config.
+   */
+  generateAll(): Map<string, WranglerConfig> {
+    const configs = new Map<string, WranglerConfig>();
+    const workers = this.app.graph.getWorkers();
+
+    for (const worker of workers) {
+      configs.set(worker.name, this.generateForWorker(worker));
+    }
+
+    return configs;
+  }
+
+  /**
+   * Serialize a wrangler config to a JSONC string.
+   *
+   * Adds a header comment identifying the file as generated by Levi,
+   * then pretty-prints the JSON with 2-space indentation.
+   */
+  static serialize(config: WranglerConfig): string {
+    const header = [
+      "// ─────────────────────────────────────────────────────────",
+      "// Generated by Levi — DO NOT EDIT MANUALLY",
+      "// Re-generate with: levi build",
+      "// ─────────────────────────────────────────────────────────",
+    ].join("\n");
+
+    return `${header}\n${JSON.stringify(config, null, 2)}\n`;
+  }
+
+  // ─── Private Helpers ─────────────────────────────────────────
+
+  /**
+   * Inspect every entry in the worker's binding map and emit the
+   * appropriate wrangler config section.
+   */
+  private processBindings(config: WranglerConfig, opts: WorkerOptions): void {
+    if (!opts.bindings) return;
+
+    for (const [bindingName, value] of Object.entries(opts.bindings)) {
+      if (value instanceof ServiceBindingRef) {
+        this.addServiceBinding(config, bindingName, value);
+      } else if (value instanceof D1Resource) {
+        this.addD1Binding(config, bindingName, value);
+      } else if (value instanceof KVResource) {
+        this.addKVBinding(config, bindingName, value);
+      } else if (value instanceof R2Resource) {
+        this.addR2Binding(config, bindingName, value);
+      } else if (value instanceof QueueResource) {
+        this.addQueueProducerBinding(config, bindingName, value);
+      } else if (value instanceof DurableObjectResource) {
+        this.addDurableObjectBinding(config, bindingName, value);
+      } else if (value instanceof VectorizeResource) {
+        this.addVectorizeBinding(config, bindingName, value);
+      } else if (value instanceof HyperdriveResource) {
+        this.addHyperdriveBinding(config, bindingName, value);
+      } else if (value instanceof WorkersAIResource) {
+        this.addWorkersAIBinding(config, bindingName, value);
+      } else if (value instanceof AIGatewayResource) {
+        this.addAIGatewayBinding(config, bindingName, value);
+      } else if (value instanceof MTLSResource) {
+        this.addMTLSBinding(config, bindingName, value);
+      } else if (value instanceof WorkflowResource) {
+        this.addWorkflowBinding(config, bindingName, value);
+      } else if (value instanceof WorkerResource) {
+        // A WorkerResource used directly as a binding is treated as a
+        // service binding (equivalent to calling .asService()).
+        this.addServiceBinding(
+          config,
+          bindingName,
+          new ServiceBindingRef(value.name),
+        );
+      }
+      // Unknown binding types are silently skipped — the escape hatch
+      // can be used to add them manually.
+    }
+  }
+
+  // ── D1 ───────────────────────────────────────────────────────
+
+  private addD1Binding(
+    config: WranglerConfig,
+    binding: string,
+    resource: D1Resource,
+  ): void {
+    if (!config.d1_databases) config.d1_databases = [];
+
+    config.d1_databases.push({
+      binding,
+      database_name: resource.name,
+      database_id: resource.options.databaseId,
+      migrations_dir: resource.options.migrations,
+    });
+  }
+
+  // ── KV ───────────────────────────────────────────────────────
+
+  private addKVBinding(
+    config: WranglerConfig,
+    binding: string,
+    resource: KVResource,
+  ): void {
+    if (!config.kv_namespaces) config.kv_namespaces = [];
+
+    config.kv_namespaces.push({
+      binding,
+      id: resource.options.namespaceId ?? "",
+      preview_id: resource.options.previewId,
+    });
+  }
+
+  // ── R2 ───────────────────────────────────────────────────────
+
+  private addR2Binding(
+    config: WranglerConfig,
+    binding: string,
+    resource: R2Resource,
+  ): void {
+    if (!config.r2_buckets) config.r2_buckets = [];
+
+    const entry: { binding: string; bucket_name: string; jurisdiction?: string } = {
+      binding,
+      bucket_name: resource.options.bucketName ?? resource.name,
+    };
+
+    if (resource.options.jurisdiction) {
+      entry.jurisdiction = resource.options.jurisdiction;
+    }
+
+    config.r2_buckets.push(entry);
+  }
+
+  // ── Queue (producer) ─────────────────────────────────────────
+
+  private addQueueProducerBinding(
+    config: WranglerConfig,
+    binding: string,
+    resource: QueueResource,
+  ): void {
+    if (!config.queues) config.queues = {};
+    if (!config.queues.producers) config.queues.producers = [];
+
+    config.queues.producers.push({
+      binding,
+      queue: resource.name,
+    });
+  }
+
+  // ── Durable Object ───────────────────────────────────────────
+
+  private addDurableObjectBinding(
+    config: WranglerConfig,
+    binding: string,
+    resource: DurableObjectResource,
+  ): void {
+    if (!config.durable_objects) config.durable_objects = { bindings: [] };
+
+    const entry: {
+      name: string;
+      class_name: string;
+      script_name?: string;
+    } = {
+      name: binding,
+      class_name: resource.options.className,
+    };
+
+    if (resource.options.scriptName) {
+      entry.script_name = resource.options.scriptName;
+    }
+
+    config.durable_objects.bindings.push(entry);
+  }
+
+  // ── Vectorize ────────────────────────────────────────────────
+
+  private addVectorizeBinding(
+    config: WranglerConfig,
+    binding: string,
+    resource: VectorizeResource,
+  ): void {
+    if (!config.vectorize) config.vectorize = [];
+
+    config.vectorize.push({
+      binding,
+      index_name: resource.name,
+    });
+  }
+
+  // ── Hyperdrive ───────────────────────────────────────────────
+
+  private addHyperdriveBinding(
+    config: WranglerConfig,
+    binding: string,
+    resource: HyperdriveResource,
+  ): void {
+    if (!config.hyperdrive) config.hyperdrive = [];
+
+    config.hyperdrive.push({
+      binding,
+      id: resource.options.configId ?? resource.name,
+    });
+  }
+
+  // ── Workers AI ───────────────────────────────────────────────
+
+  private addWorkersAIBinding(
+    config: WranglerConfig,
+    binding: string,
+    _resource: WorkersAIResource,
+  ): void {
+    config.ai = { binding };
+  }
+
+  // ── AI Gateway ───────────────────────────────────────────────
+
+  private addAIGatewayBinding(
+    config: WranglerConfig,
+    binding: string,
+    resource: AIGatewayResource,
+  ): void {
+    // The AI binding provides access to Workers AI through the gateway.
+    config.ai = { binding };
+    // Store the gateway ID as metadata. Wrangler uses the AI Gateway
+    // configuration at the account level rather than in wrangler.jsonc.
+    (config as Record<string, unknown>)["_ai_gateway"] = {
+      id: resource.options.id,
+    };
+  }
+
+  // ── Service Binding ──────────────────────────────────────────
+
+  private addServiceBinding(
+    config: WranglerConfig,
+    binding: string,
+    ref: ServiceBindingRef,
+  ): void {
+    if (!config.services) config.services = [];
+
+    config.services.push({
+      binding,
+      service: ref.workerName,
+    });
+  }
+
+  // ── mTLS ─────────────────────────────────────────────────────
+
+  private addMTLSBinding(
+    config: WranglerConfig,
+    binding: string,
+    resource: MTLSResource,
+  ): void {
+    if (!config.mtls_certificates) config.mtls_certificates = [];
+
+    config.mtls_certificates.push({
+      binding,
+      certificate_id: resource.options.certificateId,
+    });
+  }
+
+  // ── Workflow ──────────────────────────────────────────────────
+
+  private addWorkflowBinding(
+    config: WranglerConfig,
+    binding: string,
+    resource: WorkflowResource,
+  ): void {
+    if (!config.workflows) config.workflows = [];
+
+    config.workflows.push({
+      binding,
+      class_name: resource.options.className,
+      script_name: resource.options.scriptName,
+    });
+  }
+
+  // ── Queue Consumers ──────────────────────────────────────────
+
+  private processConsumers(
+    config: WranglerConfig,
+    opts: WorkerOptions,
+  ): void {
+    if (!opts.consumers || opts.consumers.length === 0) return;
+
+    if (!config.queues) config.queues = {};
+    if (!config.queues.consumers) config.queues.consumers = [];
+
+    for (const consumer of opts.consumers) {
+      const entry: {
+        queue: string;
+        max_batch_size?: number;
+        max_retries?: number;
+        max_batch_timeout?: number;
+        dead_letter_queue?: string;
+        max_concurrency?: number;
+        retry_delay?: number;
+      } = {
+        queue: consumer.queue.name,
+      };
+
+      if (consumer.maxBatchSize !== undefined) {
+        entry.max_batch_size = consumer.maxBatchSize;
+      }
+      if (consumer.maxRetries !== undefined) {
+        entry.max_retries = consumer.maxRetries;
+      }
+      if (consumer.maxWaitMs !== undefined) {
+        entry.max_batch_timeout = consumer.maxWaitMs;
+      }
+      if (consumer.deadLetterQueue) {
+        entry.dead_letter_queue = consumer.deadLetterQueue.name;
+      }
+      if (consumer.maxConcurrency !== undefined) {
+        entry.max_concurrency = consumer.maxConcurrency;
+      }
+      if (consumer.retryDelay !== undefined) {
+        entry.retry_delay = consumer.retryDelay;
+      }
+
+      config.queues.consumers.push(entry);
+    }
+  }
+
+  // ── App-level vars ───────────────────────────────────────────
+
+  private processAppVars(config: WranglerConfig): void {
+    if (this.app.vars.size === 0) return;
+
+    if (!config.vars) config.vars = {};
+
+    for (const [name, ref] of this.app.vars) {
+      config.vars[name] = ref.value;
+    }
+  }
+
+  // ── App-level secrets ────────────────────────────────────────
+
+  private processAppSecrets(config: WranglerConfig): void {
+    if (this.app.secrets.size === 0) return;
+
+    // Wrangler doesn't have a native "secrets" array in jsonc — secrets
+    // are set via `wrangler secret put`. We store them as metadata under
+    // `_levi_secrets` for tooling and documentation.
+    (config as Record<string, unknown>)["_levi_secrets"] = Array.from(
+      this.app.secrets.keys(),
+    );
+  }
+
+  // ── vinext framework defaults ────────────────────────────────
+
+  private applyVinextDefaults(
+    config: WranglerConfig,
+    opts: WorkerOptions,
+  ): void {
+    // vinext deploys as a Worker with static assets served from the
+    // build output directory. Set the assets config and node_compat.
+    if (!config.assets) {
+      config.assets = {
+        directory: ".output/public",
+        binding: "ASSETS",
+      };
+    }
+
+    // vinext may need node compat flags
+    if (!config.compatibility_flags) {
+      config.compatibility_flags = [];
+    }
+    if (!config.compatibility_flags.includes("nodejs_compat")) {
+      config.compatibility_flags.push("nodejs_compat");
+    }
+
+    // If no explicit main was set, use the vinext server entry
+    if (!opts.entrypoint.endsWith(".ts") && !opts.entrypoint.endsWith(".js")) {
+      config.main = `${opts.entrypoint}/.output/server/index.mjs`;
+    }
+  }
+
+  // ── Escape hatch merge ───────────────────────────────────────
+
+  /**
+   * Shallow-merge the escape hatch object into the config.
+   *
+   * For object values, we do a one-level deep merge to allow extending
+   * (e.g., adding extra fields to `observability`). For arrays and
+   * primitives, the escape hatch value wins.
+   */
+  private mergeEscapeHatch(
+    config: WranglerConfig,
+    overrides: Record<string, unknown>,
+  ): void {
+    for (const [key, value] of Object.entries(overrides)) {
+      const existing = config[key];
+
+      if (
+        existing !== null &&
+        existing !== undefined &&
+        typeof existing === "object" &&
+        !Array.isArray(existing) &&
+        typeof value === "object" &&
+        value !== null &&
+        !Array.isArray(value)
+      ) {
+        // One-level deep merge for objects
+        config[key] = { ...(existing as Record<string, unknown>), ...(value as Record<string, unknown>) };
+      } else {
+        config[key] = value;
+      }
+    }
+  }
+}
