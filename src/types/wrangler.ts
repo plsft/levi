@@ -208,7 +208,7 @@ export interface WranglerHyperdriveBinding {
   id: string;
 
   /** Local connection string for `wrangler dev`. */
-  localConnectionString?: string;
+  local_connection_string?: string;
 }
 
 /**
@@ -296,7 +296,10 @@ export interface WranglerBrowserBinding {
  * @see https://developers.cloudflare.com/workflows/
  */
 export interface WranglerWorkflowBinding {
-  /** Binding name available as `env.BINDING` at runtime. */
+  /** Binding name — wrangler uses `name` for workflow bindings. */
+  name: string;
+
+  /** Binding alias (also used as env accessor name). */
   binding: string;
 
   /** The exported Workflow class name. */
@@ -709,11 +712,9 @@ export interface WranglerConfig {
   vars?: Record<string, string>;
 
   /**
-   * Secret names required by this Worker.
-   *
-   * In wrangler.jsonc this is a documentation hint — actual secret
-   * values are set via `wrangler secret put`. Levi generates this list
-   * so that `levi provision` knows which secrets to prompt for.
+   * Levi extension — not part of the official wrangler.jsonc schema.
+   * Secrets are managed via `wrangler secret put`. This field is included
+   * for documentation/tooling purposes.
    */
   secrets?: string[];
 
@@ -898,9 +899,8 @@ export interface WranglerConfig {
   send_metrics?: boolean;
 
   /**
-   * Date at which this Worker was last deployed.
-   *
-   * Automatically set by Wrangler. Generally should not be set manually.
+   * When true, preserves existing environment variables during Worker upload
+   * instead of removing those not specified in the config.
    */
   keep_vars?: boolean;
 
@@ -918,27 +918,22 @@ export interface WranglerConfig {
    */
   define?: Record<string, string>;
 
-  /**
-   * Cloudchamber (containers) configuration.
-   *
-   * For Workers running as containers on Cloudflare.
-   * This feature is in beta.
-   *
-   * @see https://developers.cloudflare.com/cloudchamber/
-   */
-  containers?: {
-    /** Container image to deploy. */
-    image?: string;
-
-    /** Maximum number of instances. */
+  /** @beta Container definitions. */
+  containers?: Array<{
+    class_name: string;
+    image: string;
+    instance_type?: string | { vcpu: number; memory_mib: number; disk_mb: number };
     max_instances?: number;
+    image_build_context?: string;
+    image_vars?: Record<string, string>;
+    name?: string;
+  }>;
 
-    /** Instance memory in MB. */
-    memory?: number;
-
-    /** Instance vCPU count. */
-    vcpu?: number;
-  };
+  /** @beta Pipeline stream bindings. */
+  pipelines?: Array<{
+    binding: string;
+    pipeline: string;
+  }>;
 
   /**
    * Catch-all for any wrangler.jsonc fields not yet typed by Levi.

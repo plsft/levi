@@ -1,5 +1,5 @@
 /**
- * @flarefound/levi — The Cloudflare AppHost Framework
+ * @flarefound/levi — The AppHost Framework for Cloudflare
  *
  * Declare your entire Cloudflare application topology in a single
  * typed TypeScript file. Levi generates wrangler.jsonc configs,
@@ -7,9 +7,9 @@
  *
  * @example
  * ```ts
- * import { CloudflareApp } from "@flarefound/levi";
+ * import { FlareApp } from "@flarefound/levi";
  *
- * const app = new CloudflareApp("my-app", {
+ * const app = new FlareApp("my-app", {
  *   compatibility_date: "2026-04-01",
  * });
  *
@@ -27,7 +27,7 @@
  */
 
 // ── Core ───────────────────────────────────────────────────────
-export { CloudflareApp } from "./app.js";
+export { FlareApp } from "./app.js";
 export { AppGraph } from "./graph.js";
 export { WranglerGenerator } from "./generators/wrangler.js";
 export { loadAppFile, loadApp } from "./loader.js";
@@ -48,6 +48,8 @@ export { WorkflowResource } from "./resources/workflow.js";
 export { TailWorkerResource } from "./resources/tail-worker.js";
 export { MTLSResource } from "./resources/mtls.js";
 export { SecretResource } from "./resources/secret.js";
+export { ContainerResource } from "./resources/container.js";
+export { PipelineResource } from "./resources/pipeline.js";
 
 // ── Frameworks ─────────────────────────────────────────────────
 export {
@@ -57,6 +59,29 @@ export {
   getFrameworkPreset,
 } from "./frameworks/index.js";
 export { getVinextConfig, isVinextProject } from "./frameworks/vinext.js";
+
+// ── Cloudflare API (DNS provisioning) ──────────────────────────
+export {
+  resolveAuth,
+  findZone,
+  listDnsRecords,
+  createDnsRecord,
+  updateDnsRecord,
+  deleteDnsRecord,
+  provisionDomain,
+  teardownDomain,
+  getSslMode,
+  setSslMode,
+} from "./cloudflare/index.js";
+export type {
+  CloudflareAuth,
+  DnsRecord,
+  DnsRecordType,
+  CreateDnsRecordInput,
+  ZoneInfo,
+  SslMode,
+  DnsProvisionResult,
+} from "./cloudflare/index.js";
 
 // ── Types (re-export for convenience) ──────────────────────────
 export type {
@@ -106,11 +131,21 @@ export type {
   SSLMode,
   WorkflowOptions,
 
+  // Beta
+  ContainerOptions,
+  ContainerInstanceType,
+  PipelineOptions,
+
   // Build & Config
   BuildResult,
   WorkerFramework,
   WranglerConfig,
 } from "./types/index.js";
+
+// ── Resource option types (defined locally in resources) ────────
+export type { TailWorkerOptions } from "./resources/tail-worker.js";
+export type { MTLSOptions } from "./resources/mtls.js";
+export type { SecretOptions } from "./resources/secret.js";
 
 // ── Framework preset type ──────────────────────────────────────
 export type { FrameworkPreset } from "./frameworks/index.js";

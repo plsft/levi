@@ -1,7 +1,7 @@
 import { existsSync } from "node:fs";
 import { resolve } from "node:path";
 import { createJiti } from "jiti";
-import { CloudflareApp } from "./app.js";
+import { FlareApp } from "./app.js";
 import { logger } from "./utils/logger.js";
 
 /** Default file names searched (in priority order) when no path is given. */
@@ -16,17 +16,17 @@ const DEFAULT_FILE_NAMES = [
  * Load and evaluate the user's Levi app file.
  *
  * The app file (`levi.app.ts` by default) is a TypeScript/JavaScript module
- * whose default export is a {@link CloudflareApp} instance. This function
+ * whose default export is a {@link FlareApp} instance. This function
  * uses [jiti](https://github.com/unjs/jiti) to transpile and evaluate the
  * file at runtime so that it works regardless of whether the host project
  * has a build step configured.
  *
  * @param path - Optional explicit path to the app file. When omitted, the
  *   current working directory is searched for the default file names.
- * @returns The evaluated {@link CloudflareApp} instance.
+ * @returns The evaluated {@link FlareApp} instance.
  *
  * @throws {Error} If no app file is found, or it does not default-export
- *   a `CloudflareApp` instance.
+ *   a `FlareApp` instance.
  *
  * @example
  * ```ts
@@ -34,7 +34,7 @@ const DEFAULT_FILE_NAMES = [
  * const result = app.build();
  * ```
  */
-export async function loadAppFile(path?: string): Promise<CloudflareApp> {
+export async function loadAppFile(path?: string): Promise<FlareApp> {
   const resolvedPath = path ? resolve(path) : findAppFile(process.cwd());
 
   if (!resolvedPath) {
@@ -74,10 +74,10 @@ export async function loadAppFile(path?: string): Promise<CloudflareApp> {
   // Extract the default export
   const app = extractDefaultExport(mod);
 
-  if (!(app instanceof CloudflareApp)) {
+  if (!(app instanceof FlareApp)) {
     throw new Error(
-      `The app file at ${resolvedPath} does not default-export a CloudflareApp instance.\n` +
-        `Expected: export default new CloudflareApp("my-app", { ... });\n` +
+      `The app file at ${resolvedPath} does not default-export a FlareApp instance.\n` +
+        `Expected: export default new FlareApp("my-app", { ... });\n` +
         `Got: ${typeof app}${app === null ? " (null)" : app === undefined ? " (undefined)" : ""}`,
     );
   }
@@ -114,8 +114,8 @@ function findAppFile(dir: string): string | null {
 function extractDefaultExport(mod: unknown): unknown {
   if (mod === null || mod === undefined) return mod;
 
-  // Direct CloudflareApp instance (interopDefault worked)
-  if (mod instanceof CloudflareApp) return mod;
+  // Direct FlareApp instance (interopDefault worked)
+  if (mod instanceof FlareApp) return mod;
 
   // ESM module with a `default` property
   if (typeof mod === "object" && "default" in mod) {

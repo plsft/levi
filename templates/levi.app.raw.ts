@@ -14,13 +14,13 @@
  *   levi deploy
  */
 
-import { CloudflareApp } from "@flarefound/levi";
+import { FlareApp } from "@flarefound/levi";
 
 // ---------------------------------------------------------------------------
 // Application
 // ---------------------------------------------------------------------------
 
-const app = new CloudflareApp("my-worker", {
+const app = new FlareApp("my-worker", {
   compatibility_date: "2026-04-01",
 });
 

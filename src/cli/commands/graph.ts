@@ -107,7 +107,7 @@ export default defineCommand({
       `  \x1b[1m${app.name}\x1b[0m — Application Dependency Graph`,
     );
     console.log(
-      `  ${graphNodes.length} resources, ${graph.edges.size} connections`,
+      `  ${graphNodes.length} resources, ${[...graph.edges.values()].reduce((sum, deps) => sum + deps.size, 0)} connections`,
     );
     console.log("");
 

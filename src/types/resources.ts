@@ -25,7 +25,7 @@ export type WorkerFramework = Framework;
 // Build Result
 // ---------------------------------------------------------------------------
 
-/** Result returned by `CloudflareApp.build()`. */
+/** Result returned by `FlareApp.build()`. */
 export interface BuildResult {
   /** Whether the build (validation) succeeded. */
   success: boolean;

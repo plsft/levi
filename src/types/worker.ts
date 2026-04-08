@@ -432,8 +432,8 @@ export interface WorkerOptions {
    * wrangler.jsonc, allowing access to new or niche Wrangler features
    * that Levi does not yet have typed support for.
    *
-   * Properties set here take lowest priority — typed Levi config always
-   * wins in case of conflicts.
+   * Properties set here take highest priority — they override typed Levi
+   * config in case of conflicts. This is your escape hatch.
    *
    * @example
    * ```ts

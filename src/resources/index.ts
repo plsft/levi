@@ -16,3 +16,5 @@ export { MTLSResource } from "./mtls.js";
 export type { MTLSOptions } from "./mtls.js";
 export { SecretResource } from "./secret.js";
 export type { SecretOptions } from "./secret.js";
+export { ContainerResource } from "./container.js";
+export { PipelineResource } from "./pipeline.js";

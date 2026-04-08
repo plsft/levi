@@ -87,10 +87,10 @@ export default defineCommand({
     const configs = generator.generateAll();
     const outDir = resolve(process.cwd(), app.options.outDir || ".levi");
 
-    for (const [workerName, config] of Object.entries(configs)) {
+    for (const [workerName, config] of configs) {
       const configPath = resolve(outDir, "workers", workerName, "wrangler.jsonc");
       mkdirSync(dirname(configPath), { recursive: true });
-      writeFileSync(configPath, config);
+      writeFileSync(configPath, WranglerGenerator.serialize(config));
     }
 
     // Write graph.json

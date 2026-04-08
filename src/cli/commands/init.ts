@@ -11,7 +11,7 @@ function getAppTemplate(
   projectName: string,
   framework: "vinext" | "hono" | "raw",
 ): string {
-  const header = `import { CloudflareApp } from "@flarefound/levi";\n\nconst app = new CloudflareApp("${projectName}", {\n  compatibility_date: "${new Date().toISOString().slice(0, 10)}",\n});\n`;
+  const header = `import { FlareApp } from "@flarefound/levi";\n\nconst app = new FlareApp("${projectName}", {\n  compatibility_date: "${new Date().toISOString().slice(0, 10)}",\n});\n`;
 
   if (framework === "vinext") {
     return `${header}
@@ -73,7 +73,7 @@ export default defineCommand({
   },
   args: {},
   async run() {
-    consola.info("Welcome to Levi — the Cloudflare AppHost Framework\n");
+    consola.info("Welcome to Levi — the AppHost Framework for Cloudflare\n");
 
     const cwd = process.cwd();
     const defaultName = basename(cwd);

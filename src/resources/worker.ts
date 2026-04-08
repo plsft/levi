@@ -26,7 +26,7 @@ export class WorkerResource extends Resource<WorkerOptions> {
    * to bind to this worker via the service bindings API.
    */
   asService(): ServiceBindingRef {
-    return new ServiceBindingRef(this.name);
+    return new ServiceBindingRef(this.name, this);
   }
 
   /** Whether this worker uses the Vinext framework. */
@@ -39,11 +39,24 @@ export class WorkerResource extends Resource<WorkerOptions> {
    * as a dependency of this worker.
    */
   private collectBindingDependencies(): void {
-    if (!this.options.bindings) return;
+    if (this.options.bindings) {
+      for (const resource of Object.values(this.options.bindings)) {
+        if (resource instanceof Resource) {
+          this.dependsOn(resource);
+        } else if (resource instanceof ServiceBindingRef && resource.source) {
+          this.dependsOn(resource.source);
+        }
+      }
+    }
 
-    for (const resource of Object.values(this.options.bindings)) {
-      if (resource instanceof Resource) {
-        this.dependsOn(resource);
+    if (this.options.consumers) {
+      for (const consumer of this.options.consumers) {
+        if (consumer.queue && typeof consumer.queue === "object" && "name" in consumer.queue) {
+          this.dependsOn(consumer.queue as any);
+        }
+        if (consumer.deadLetterQueue && typeof consumer.deadLetterQueue === "object" && "name" in consumer.deadLetterQueue) {
+          this.dependsOn(consumer.deadLetterQueue as any);
+        }
       }
     }
   }

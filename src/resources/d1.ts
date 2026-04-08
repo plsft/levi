@@ -9,7 +9,4 @@ import { Resource } from "./base.js";
  */
 export class D1Resource extends Resource<D1Options> {
   readonly type: ResourceType = "d1";
-
-  /** The wrangler binding type used during config generation. */
-  readonly bindingType = "d1_databases" as const;
 }

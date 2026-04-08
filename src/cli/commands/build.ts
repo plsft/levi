@@ -60,17 +60,17 @@ export default defineCommand({
     const outDir = resolve(process.cwd(), app.options.outDir || ".levi");
 
     // Write worker configs
-    for (const [workerName, config] of Object.entries(configs)) {
+    for (const [workerName, config] of configs) {
       const configPath = resolve(outDir, "workers", workerName, "wrangler.jsonc");
       mkdirSync(dirname(configPath), { recursive: true });
-      writeFileSync(configPath, config);
+      writeFileSync(configPath, WranglerGenerator.serialize(config));
       consola.success(`Generated ${workerName}/wrangler.jsonc`);
     }
 
     // Write graph.json
     const graphPath = resolve(outDir, "graph.json");
     mkdirSync(dirname(graphPath), { recursive: true });
-    writeFileSync(graphPath, JSON.stringify(graph, null, 2));
+    writeFileSync(graphPath, JSON.stringify(graph.serialize(), null, 2));
     consola.success("Generated graph.json");
 
     // ── Summary ────────────────────────────────────────────────

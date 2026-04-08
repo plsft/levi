@@ -1,5 +1,5 @@
 /**
- * Common shared types for the Levi Cloudflare AppHost framework.
+ * Common shared types for the Levi AppHost framework for Cloudflare.
  *
  * These types are used across all resource builders and form the
  * foundation of the Levi type system.
@@ -33,7 +33,9 @@ export type ResourceType =
   | "tail-worker"
   | "mtls"
   | "secret"
-  | "var";
+  | "var"
+  | "container"
+  | "pipeline";
 
 // ---------------------------------------------------------------------------
 // Framework
@@ -126,7 +128,7 @@ export interface CronConfig {
  * Every resource in the app graph implements this interface. The `type`
  * discriminant enables exhaustive switches when processing the graph.
  */
-export interface Resource {
+export interface ResourceShape {
   /** The Cloudflare resource type. */
   readonly type: ResourceType;
 
@@ -138,6 +140,11 @@ export interface Resource {
   readonly name: string;
 }
 
+/**
+ * @deprecated Use `ResourceShape` instead. Kept for backwards compatibility.
+ */
+export type Resource = ResourceShape;
+
 // ---------------------------------------------------------------------------
 // Forward-declared resource interfaces (for cross-references)
 // ---------------------------------------------------------------------------
@@ -146,7 +153,7 @@ export interface Resource {
  * Minimal shape of a Queue resource, used by {@link ConsumerConfig} to
  * reference a queue without creating a circular import.
  */
-export interface QueueResource extends Resource {
+export interface QueueResourceShape extends ResourceShape {
   readonly type: "queue";
 }
 
@@ -167,7 +174,7 @@ export interface ConsumerConfig {
    * The queue resource to consume messages from.
    * Must be a queue created via `app.addQueue()`.
    */
-  queue: QueueResource;
+  queue: QueueResourceShape;
 
   /**
    * Maximum number of messages delivered per batch.
@@ -202,7 +209,7 @@ export interface ConsumerConfig {
    * Optional dead-letter queue that receives messages which have
    * exhausted all retries. Must be a queue created via `app.addQueue()`.
    */
-  deadLetterQueue?: QueueResource;
+  deadLetterQueue?: QueueResourceShape;
 
   /**
    * Maximum number of concurrent consumers (parallel invocations).
@@ -242,7 +249,17 @@ export interface ConsumerConfig {
  * };
  * ```
  */
-export type BindingMap = Record<string, Resource>;
+export type BindingMap = Record<string, Resource | ServiceBindingRef>;
+
+/**
+ * Minimal shape of a service binding reference.
+ *
+ * This allows `.asService()` return values to be used in worker
+ * binding maps without importing the runtime class.
+ */
+export interface ServiceBindingRef {
+  readonly workerName: string;
+}
 
 // ---------------------------------------------------------------------------
 // Environment Config
@@ -322,14 +339,14 @@ export interface EnvironmentConfig {
 // ---------------------------------------------------------------------------
 
 /**
- * Options for the `CloudflareApp` constructor.
+ * Options for the `FlareApp` constructor.
  *
  * These configure the top-level application settings that apply across
  * all resources and workers in the app graph.
  *
  * @example
  * ```ts
- * const app = new CloudflareApp("my-app", {
+ * const app = new FlareApp("my-app", {
  *   account: process.env.CF_ACCOUNT_ID,
  *   compatibility_date: "2026-04-01",
  *   environments: {

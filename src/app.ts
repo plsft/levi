@@ -14,6 +14,8 @@ import type {
   DomainOptions,
   WorkerOptions,
   WorkflowOptions,
+  ContainerOptions,
+  PipelineOptions,
   BuildResult,
 } from "./types/index.js";
 
@@ -32,6 +34,8 @@ import { DomainResource } from "./resources/domain.js";
 import { WorkflowResource } from "./resources/workflow.js";
 import { TailWorkerResource } from "./resources/tail-worker.js";
 import { MTLSResource } from "./resources/mtls.js";
+import { ContainerResource } from "./resources/container.js";
+import { PipelineResource } from "./resources/pipeline.js";
 
 import type { TailWorkerOptions } from "./resources/tail-worker.js";
 import type { MTLSOptions } from "./resources/mtls.js";
@@ -41,7 +45,7 @@ import { logger } from "./utils/logger.js";
 /**
  * The main builder class for a Levi Cloudflare application.
  *
- * `CloudflareApp` is the entry point for declaring your entire
+ * `FlareApp` is the entry point for declaring your entire
  * Cloudflare topology in a single TypeScript file (`levi.app.ts`).
  * It provides typed `add*()` methods for every Cloudflare primitive,
  * builds an in-memory dependency graph, validates it, and produces
@@ -49,9 +53,9 @@ import { logger } from "./utils/logger.js";
  *
  * @example
  * ```ts
- * import { CloudflareApp } from "@flarefound/levi";
+ * import { FlareApp } from "@flarefound/levi";
  *
- * const app = new CloudflareApp("my-app", {
+ * const app = new FlareApp("my-app", {
  *   compatibility_date: "2026-04-01",
  * });
  *
@@ -64,7 +68,7 @@ import { logger } from "./utils/logger.js";
  * export default app;
  * ```
  */
-export class CloudflareApp {
+export class FlareApp {
   /** Logical name for the application (used as a prefix in generated configs). */
   readonly name: string;
 
@@ -241,6 +245,30 @@ export class CloudflareApp {
    */
   addMTLS(name: string, options: MTLSOptions): MTLSResource {
     const resource = new MTLSResource(name, options);
+    this.graph.add(resource);
+    return resource;
+  }
+
+  // ─── Beta ───────────────────────────────────────────────────
+
+  /**
+   * Add a Container to the application.
+   * Containers run Docker images alongside Workers via Durable Objects.
+   * @beta — Cloudflare Containers is in open beta.
+   */
+  addContainer(name: string, options: ContainerOptions): ContainerResource {
+    const resource = new ContainerResource(name, options);
+    this.graph.add(resource);
+    return resource;
+  }
+
+  /**
+   * Add a Pipeline stream binding to the application.
+   * Pipelines ingest, transform, and deliver data to R2.
+   * @beta — Cloudflare Pipelines is in open beta.
+   */
+  addPipeline(name: string, options: PipelineOptions): PipelineResource {
+    const resource = new PipelineResource(name, options);
     this.graph.add(resource);
     return resource;
   }

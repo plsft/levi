@@ -1,5 +1,5 @@
 /**
- * Levi type definitions — the intellisense surface for the Cloudflare AppHost framework.
+ * Levi type definitions — the intellisense surface for the AppHost framework for Cloudflare.
  *
  * This barrel module re-exports all types from the Levi type system.
  * Import from `@flarefound/levi/types` or individual submodules.
@@ -19,7 +19,7 @@ export type {
   VarRef,
   CronConfig,
   Resource,
-  QueueResource,
+  QueueResourceShape,
   ConsumerConfig,
   BindingMap,
   EnvironmentConfig,
@@ -77,6 +77,12 @@ export type { SSLMode, DomainOptions } from "./domain.js";
 
 // ── Workflow ────────────────────────────────────────────────────
 export type { WorkflowOptions } from "./workflow.js";
+
+// ── Container (beta) ───────────────────────────────────────────
+export type { ContainerInstanceType, ContainerOptions } from "./container.js";
+
+// ── Pipeline (beta) ────────────────────────────────────────────
+export type { PipelineOptions } from "./pipeline.js";
 
 // ── Supplementary ──────────────────────────────────────────────
 export type { WorkerFramework, BuildResult } from "./resources.js";

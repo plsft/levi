@@ -1,0 +1,11 @@
+name = "levi-site"
+main = "src/worker.js"
+compatibility_date = "2026-04-01"
+
+routes = [
+  { pattern = "levi.flarefound.com/*", zone_name = "flarefound.com" }
+]
+
+[assets]
+directory = "./dist"
+binding = "ASSETS"

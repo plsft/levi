@@ -5,7 +5,7 @@ const main = defineCommand({
     name: "levi",
     version: "0.1.0",
     description:
-      "The Cloudflare AppHost Framework — Aspire for Cloudflare. Declare your entire Cloudflare topology in TypeScript.",
+      "The AppHost Framework for Cloudflare — Aspire for Cloudflare. Declare your entire Cloudflare topology in TypeScript.",
   },
   subCommands: {
     init: () => import("./commands/init.js").then((m) => m.default),

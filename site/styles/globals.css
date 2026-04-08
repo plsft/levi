@@ -1,0 +1,386 @@
+@import "tailwindcss";
+
+/* ═══════════════════════════════════════════════════════════════
+   LEVI — Denim Theme
+   Blue jeans aesthetic: indigo tones, beige stitch patterns,
+   vertical red tabs, distressed texture
+   ═══════════════════════════════════════════════════════════════ */
+
+@theme {
+  --color-denim-50: #e8edf6;
+  --color-denim-100: #c8d5eb;
+  --color-denim-200: #9bb3d9;
+  --color-denim-300: #6d8fc4;
+  --color-denim-400: #4a72b3;
+  --color-denim-500: #2d5599;
+  --color-denim-600: #1e3f7a;
+  --color-denim-700: #162f5c;
+  --color-denim-800: #0f2042;
+  --color-denim-900: #0a1628;
+  --color-denim-950: #060e1a;
+
+  --color-wash-50: #eef1ff;
+  --color-wash-100: #d8dffe;
+  --color-wash-200: #b5c1fd;
+  --color-wash-300: #8a9bfb;
+  --color-wash-400: #6677f4;
+  --color-wash-500: #4a55e8;
+  --color-wash-600: #3840c7;
+  --color-wash-700: #2d32a0;
+  --color-wash-800: #242879;
+  --color-wash-900: #1c2060;
+
+  --color-redtab-400: #ff6b5b;
+  --color-redtab-500: #f43f2c;
+  --color-redtab-600: #c41200;
+  --color-redtab-700: #a31500;
+
+  /* Beige / tan stitch thread — like the real thing */
+  --color-thread-300: #d4b896;
+  --color-thread-400: #c9a84c;
+  --color-thread-500: #b89a5a;
+  --color-thread-600: #a68a4a;
+
+  --font-mono: "JetBrains Mono", "Fira Code", ui-monospace, monospace;
+  --font-sans: "Inter", system-ui, -apple-system, sans-serif;
+}
+
+/* ── Base ─────────────────────────────────────────────────────── */
+
+html { scroll-behavior: smooth; }
+
+::selection {
+  background-color: var(--color-wash-600);
+  color: var(--color-denim-50);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   DENIM TEXTURE — Distressed blue jeans look
+   Layered: diagonal twill weave + noise/fading + wear spots
+   ═══════════════════════════════════════════════════════════════ */
+
+.denim-texture {
+  background-color: var(--color-denim-950);
+  background-image:
+    /* Subtle light "wear" spots — distressed fading */
+    radial-gradient(
+      ellipse 600px 300px at 20% 50%,
+      rgba(30, 63, 122, 0.08) 0%,
+      transparent 100%
+    ),
+    radial-gradient(
+      ellipse 400px 200px at 75% 30%,
+      rgba(30, 63, 122, 0.06) 0%,
+      transparent 100%
+    ),
+    radial-gradient(
+      ellipse 300px 400px at 50% 80%,
+      rgba(30, 63, 122, 0.05) 0%,
+      transparent 100%
+    ),
+    /* Diagonal twill weave — the denim grain */
+    repeating-linear-gradient(
+      160deg,
+      transparent,
+      transparent 1px,
+      rgba(45, 85, 153, 0.04) 1px,
+      rgba(45, 85, 153, 0.04) 2px
+    ),
+    /* Cross-weave (perpendicular thread) */
+    repeating-linear-gradient(
+      70deg,
+      transparent,
+      transparent 2px,
+      rgba(20, 50, 100, 0.03) 2px,
+      rgba(20, 50, 100, 0.03) 3px
+    );
+}
+
+/* ── Denim wash — faded center like worn jeans ────────────────── */
+
+.denim-wash {
+  background:
+    /* Distress — light wear patches */
+    radial-gradient(
+      ellipse 500px 250px at 30% 40%,
+      rgba(45, 85, 153, 0.12) 0%,
+      transparent 70%
+    ),
+    radial-gradient(
+      ellipse 400px 300px at 70% 60%,
+      rgba(45, 85, 153, 0.08) 0%,
+      transparent 70%
+    ),
+    /* Base wash gradient */
+    radial-gradient(
+      ellipse at 50% 30%,
+      var(--color-denim-800) 0%,
+      var(--color-denim-900) 50%,
+      var(--color-denim-950) 100%
+    );
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   STITCH PATTERNS — Beige/tan thread like real denim
+   ═══════════════════════════════════════════════════════════════ */
+
+.stitch-border {
+  border: 2px dashed var(--color-thread-500);
+}
+
+.stitch-border-b {
+  border-bottom: 2px dashed var(--color-thread-500);
+}
+
+.stitch-border-t {
+  border-top: 2px dashed var(--color-thread-500);
+}
+
+/* Double stitch line — like a seam */
+.stitch-double {
+  position: relative;
+}
+.stitch-double::before,
+.stitch-double::after {
+  content: "";
+  position: absolute;
+  left: 0; right: 0;
+  height: 0;
+  border-top: 1.5px dashed var(--color-thread-400);
+}
+.stitch-double::before { top: 0; }
+.stitch-double::after { top: 4px; }
+
+/* Running thread separator — beige dashes */
+.stitch-separator {
+  height: 2px;
+  background: repeating-linear-gradient(
+    90deg,
+    var(--color-thread-500) 0px,
+    var(--color-thread-500) 8px,
+    transparent 8px,
+    transparent 14px
+  );
+  opacity: 0.5;
+}
+
+/* Cross-stitch corner accent */
+.stitch-corner::before {
+  content: "\00D7";
+  position: absolute;
+  top: -6px; left: -6px;
+  font-size: 14px;
+  color: var(--color-thread-400);
+  line-height: 1;
+}
+
+/* Pocket outline — rounded with beige stitch border */
+.denim-pocket {
+  border: 2px dashed var(--color-thread-500);
+  border-radius: 0 0 16px 16px;
+  position: relative;
+}
+.denim-pocket::before {
+  content: "";
+  position: absolute;
+  inset: 3px;
+  border: 1px dashed var(--color-thread-600);
+  border-radius: 0 0 14px 14px;
+  pointer-events: none;
+}
+
+/* Rivet — metal dot at stress points */
+.rivet::after {
+  content: "";
+  position: absolute;
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--color-thread-400) 30%, var(--color-denim-600) 100%);
+  top: 50%; right: -12px;
+  transform: translateY(-50%);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   RED TAB — Vertical, like the real Levi's jeans tag
+   Tall and narrow, text reads bottom-to-top (rotated)
+   ═══════════════════════════════════════════════════════════════ */
+
+.red-tab {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--color-redtab-600);
+  color: white;
+  font-size: 0.5rem;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  padding: 6px 3px 4px 3px;
+  line-height: 1;
+  min-width: 14px;
+  border-radius: 0 0 2px 2px;
+  position: relative;
+  /* Subtle fabric fold shadow */
+  box-shadow:
+    1px 0 2px rgba(0, 0, 0, 0.3),
+    inset 0 0 0 0.5px rgba(255, 255, 255, 0.1);
+  /* Folded bottom edge */
+  clip-path: polygon(0 0, 100% 0, 100% 92%, 85% 100%, 15% 100%, 0 92%);
+}
+
+.red-tab-lg {
+  font-size: 0.6rem;
+  padding: 8px 4px 6px 4px;
+  min-width: 18px;
+  letter-spacing: 0.12em;
+}
+
+/* Horizontal variant for inline use (small badges) */
+.red-tab-h {
+  display: inline-flex;
+  align-items: center;
+  background-color: var(--color-redtab-600);
+  color: white;
+  font-size: 0.55rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 2px 6px;
+  line-height: 1.2;
+  border-radius: 1px;
+  box-shadow:
+    1px 0 2px rgba(0, 0, 0, 0.3),
+    inset 0 0 0 0.5px rgba(255, 255, 255, 0.1);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   TERMINAL / CODE BLOCKS
+   ═══════════════════════════════════════════════════════════════ */
+
+.terminal {
+  background: linear-gradient(180deg, var(--color-denim-900) 0%, var(--color-denim-950) 100%);
+  border: 1px solid var(--color-denim-700);
+  border-radius: 8px;
+  overflow: hidden;
+  font-family: var(--font-mono);
+}
+
+.terminal-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 14px;
+  background: var(--color-denim-800);
+  border-bottom: 1px solid var(--color-denim-700);
+}
+
+.terminal-dot {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+}
+
+.terminal-body {
+  padding: 16px 20px;
+  overflow-x: auto;
+  line-height: 1.7;
+}
+
+.terminal-body code { font-size: 0.85rem; }
+
+.inline-code {
+  background: var(--color-denim-800);
+  border: 1px solid var(--color-denim-700);
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-size: 0.85em;
+  font-family: var(--font-mono);
+  color: var(--color-wash-300);
+}
+
+/* ── Syntax highlighting ──────────────────────────────────────── */
+
+.syn-kw { color: #7aa2f7; }
+.syn-str { color: #9ece6a; }
+.syn-cmt { color: #565f89; font-style: italic; }
+.syn-type { color: #bb9af7; }
+.syn-fn { color: #7dcfff; }
+.syn-num { color: #ff9e64; }
+.syn-const { color: #c0caf5; }
+.syn-prop { color: #73daca; }
+.syn-punc { color: #89a4bb; }
+.syn-op { color: #89ddff; }
+
+/* ═══════════════════════════════════════════════════════════════
+   PROSE — Doc content styling (beige stitch accents)
+   ═══════════════════════════════════════════════════════════════ */
+
+.prose-denim h2 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-top: 3rem;
+  margin-bottom: 1rem;
+  color: var(--color-denim-50);
+  padding-bottom: 0.5rem;
+  border-bottom: 2px dashed var(--color-thread-500);
+}
+
+.prose-denim h3 {
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin-top: 2rem;
+  margin-bottom: 0.75rem;
+  color: var(--color-denim-100);
+}
+
+.prose-denim p {
+  margin-bottom: 1rem;
+  color: var(--color-denim-200);
+  line-height: 1.8;
+}
+
+.prose-denim ul {
+  list-style: none;
+  padding-left: 0;
+  margin-bottom: 1rem;
+}
+
+.prose-denim li {
+  position: relative;
+  padding-left: 1.5rem;
+  margin-bottom: 0.5rem;
+  color: var(--color-denim-200);
+}
+
+.prose-denim li::before {
+  content: "\2022";
+  position: absolute;
+  left: 0.25rem;
+  color: var(--color-thread-400);
+  font-weight: bold;
+}
+
+.prose-denim a {
+  color: var(--color-wash-400);
+  text-decoration: underline;
+  text-decoration-style: dashed;
+  text-decoration-color: var(--color-thread-500);
+  text-underline-offset: 3px;
+  transition: color 0.15s;
+}
+
+.prose-denim a:hover {
+  color: var(--color-wash-300);
+}
+
+.prose-denim strong {
+  color: var(--color-denim-100);
+  font-weight: 600;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: var(--color-denim-900); }
+::-webkit-scrollbar-thumb { background: var(--color-denim-600); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: var(--color-denim-500); }

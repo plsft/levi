@@ -68,7 +68,8 @@ export default defineCommand({
       `Diff for ${workers.length} worker(s), ${graph.nodes.length} total resource(s):\n`,
     );
 
-    for (const [workerName, newConfig] of Object.entries(configs)) {
+    for (const [workerName, config] of configs) {
+      const newConfig = WranglerGenerator.serialize(config);
       const configPath = resolve(
         outDir,
         "workers",

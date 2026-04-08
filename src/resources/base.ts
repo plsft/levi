@@ -5,7 +5,15 @@ import type { ResourceType } from "../types/index.js";
  * to communicate with this worker via the service bindings API.
  */
 export class ServiceBindingRef {
-  constructor(public readonly workerName: string) {}
+  /** The source worker resource that created this ref. */
+  readonly source?: Resource;
+
+  constructor(
+    public readonly workerName: string,
+    source?: Resource,
+  ) {
+    this.source = source;
+  }
 }
 
 /**

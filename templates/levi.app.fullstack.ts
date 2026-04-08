@@ -19,13 +19,13 @@
  *   levi deploy --env production
  */
 
-import { CloudflareApp } from "@flarefound/levi";
+import { FlareApp } from "@flarefound/levi";
 
 // ---------------------------------------------------------------------------
 // Application
 // ---------------------------------------------------------------------------
 
-const app = new CloudflareApp("acme-saas", {
+const app = new FlareApp("acme-saas", {
   account: process.env.CF_ACCOUNT_ID,
   compatibility_date: "2026-04-01",
   environments: {
