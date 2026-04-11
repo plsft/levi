@@ -117,17 +117,18 @@ Every Cloudflare primitive gets a typed builder method with full IntelliSense:
 
 ## CLI Commands
 
-| Command | Description |
-|---|---|
-| `levi init` | Scaffold a new project (vinext, hono, or raw) |
-| `levi build` | Parse `levi.app.ts` and generate all `wrangler.jsonc` configs |
-| `levi dev` | Build + launch `wrangler dev` for each worker locally |
-| `levi deploy` | Build + deploy all workers in dependency order |
-| `levi provision` | Create Cloudflare resources (D1, KV, domains via API) |
-| `levi graph` | Print the dependency graph to the terminal |
-| `levi diff` | Show what configs would change vs. current |
-| `levi eject` | Copy generated configs to project root — remove Levi |
-| `levi dashboard` | Topology dashboard (coming soon) |
+```bash
+npx levi init              # scaffold a project
+npx levi build             # generate wrangler.jsonc configs
+npx levi build --env prod  # generate configs for specific environment
+npx levi dev                # local dev with live reload
+npx levi dev --env local   # dev with local environment
+npx levi deploy            # provision + deploy all workers
+npx levi deploy --env prod # deploy to specific environment
+npx levi provision         # create Cloudflare resources only
+npx levi diff              # compare local vs deployed configs
+npx levi dashboard         # ASCII topology dashboard
+```
 
 ## Programmatic API
 
