@@ -97,7 +97,7 @@ Levi supports 17 Cloudflare resource types. Each is created via a method on `Fla
 
 The primary compute unit. Supports three frameworks:
 - `"hono"` — Hono web framework for APIs
-- `"vinext"` — Cloudflare's Vite-based framework for full-stack apps (recommended for web apps)
+- `"vinext"` — Cloudflare's Vite-based framework for full-stack apps
 - `"raw"` — No framework, exports fetch handler directly (default)
 
 ```typescript

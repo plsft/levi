@@ -127,7 +127,7 @@ export default function GettingStartedPage() {
           <strong>Framework</strong> — Choose one:
           <ul className="mt-2 ml-4">
             <li>
-              <strong>vinext</strong> (recommended) — React 19 + Vite on
+              <strong>vinext</strong> — React 19 + Vite on
               Cloudflare Workers with a Next.js-compatible API surface. Full SSR,
               file-based routing, and server components.
             </li>

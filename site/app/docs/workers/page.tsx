@@ -40,7 +40,7 @@ export default function WorkersPage() {
         <ul className="list-disc list-inside text-denim-200 space-y-1 ml-2">
           <li>
             <strong className="text-wash-300">vinext</strong> — Full-stack React 19
-            + Vite SSR on Workers (recommended)
+            + Vite SSR on Workers
           </li>
           <li>
             <strong className="text-wash-300">tanstack</strong> — Vite + React +

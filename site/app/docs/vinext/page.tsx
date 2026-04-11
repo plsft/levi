@@ -9,10 +9,9 @@ export default function VinextPage() {
       <div className="mb-8">
         <div className="flex items-center gap-3 mb-4">
           <h1 className="text-3xl font-bold text-denim-50">vinext Integration</h1>
-          <span className="red-tab-h">recommended</span>
         </div>
         <p className="text-denim-200 text-lg leading-relaxed max-w-2xl">
-          vinext is the recommended frontend framework for Levi projects.
+          vinext is a frontend framework for Levi projects.
           It is Vite-native, runs on Cloudflare Workers, and supports
           React 19 SSR out of the box. Levi provides first-class
           integration with zero extra configuration.
@@ -26,7 +25,7 @@ export default function VinextPage() {
 
       <p>
         Levi is framework-agnostic — you can deploy any Worker. But when you
-        need a frontend, vinext is the <strong>recommended choice</strong>{" "}
+        need a frontend, vinext is a{" "}
         because it was designed for exactly this stack:
       </p>
 
