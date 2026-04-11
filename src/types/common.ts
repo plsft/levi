@@ -48,10 +48,12 @@ export type ResourceType =
  * - `"vinext"` — Cloudflare's Vite-based framework (first-class support).
  *   When selected, Levi generates assets config and server settings
  *   appropriate for vinext deployments.
+ * - `"tanstack"` — TanStack (Query + Router) SPA frontend. Levi generates
+ *   assets config for static file serving and service binding to API workers.
  * - `"raw"` — No framework. The entrypoint must export a `fetch` handler
  *   (and optionally `scheduled`, `queue`, etc.) directly.
  */
-export type Framework = "hono" | "vinext" | "raw";
+export type Framework = "hono" | "vinext" | "tanstack" | "raw";
 
 // ---------------------------------------------------------------------------
 // Secret & Var References

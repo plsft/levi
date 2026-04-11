@@ -34,6 +34,11 @@ export class WorkerResource extends Resource<WorkerOptions> {
     return this.options.framework === "vinext";
   }
 
+  /** Whether this worker uses the TanStack SPA framework. */
+  isTanstack(): boolean {
+    return this.options.framework === "tanstack";
+  }
+
   /**
    * Scans the bindings map and automatically adds each bound resource
    * as a dependency of this worker.

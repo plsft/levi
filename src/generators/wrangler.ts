@@ -205,6 +205,11 @@ export class WranglerGenerator {
       this.applyVinextDefaults(config, opts);
     }
 
+    // TanStack SPA framework detection
+    if (worker.isTanstack()) {
+      this.applyTanstackDefaults(config, opts);
+    }
+
     // Escape hatch: merge raw wrangler overrides last so they win
     if (opts.wrangler) {
       this.mergeEscapeHatch(config, opts.wrangler);
@@ -663,6 +668,24 @@ export class WranglerGenerator {
     // vinext server entry point produced by `vinext build`
     if (!opts.entrypoint.endsWith(".ts") && !opts.entrypoint.endsWith(".js")) {
       config.main = this.resolvePathForConfig(`${entryDir}/dist/server/index.js`, this.currentWorkerName);
+    }
+  }
+
+  // ── TanStack SPA framework defaults ─────────────────────────
+
+  private applyTanstackDefaults(
+    config: WranglerConfig,
+    opts: WorkerOptions,
+  ): void {
+    // TanStack SPA serves static assets from dist/client/
+    // Strip ./ prefix for path construction
+    const entryDir = opts.entrypoint.replace(/\\/g, "/").replace(/^\.\//, "");
+
+    if (!config.assets) {
+      config.assets = {
+        directory: this.resolvePathForConfig(`${entryDir}/dist/client`, this.currentWorkerName),
+        binding: "ASSETS",
+      };
     }
   }
 

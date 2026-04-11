@@ -126,8 +126,15 @@ export default function CLIReferencePage() {
             Cloudflare Workers support, plus a Hono API worker.
           </li>
           <li>
-            <strong>none</strong> — Pure API project. Scaffolds only a Hono-based
+            <strong>TanStack SPA</strong> — Scaffolds a Vite + React + TanStack Query + TanStack Router
+            SPA frontend with a Hono API worker. Pure client-side, no SSR.
+          </li>
+          <li>
+            <strong>hono</strong> — Pure API project. Scaffolds only a Hono-based
             worker with no frontend.
+          </li>
+          <li>
+            <strong>raw</strong> — Plain Worker with no framework.
           </li>
         </ul>
 

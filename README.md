@@ -182,6 +182,28 @@ Creates DNS records, configures SSL mode, and sets up www redirects — all idem
 - `nodejs_compat` compatibility flag
 - Service bindings for frontend-to-API communication
 
+## TanStack SPA Support
+
+TanStack SPA is a pure client-side frontend using Vite + React + TanStack Query + TanStack Router. `framework: "tanstack"` auto-configures:
+
+- Static assets serving (`dist/client/`)
+- Service binding to connected API workers
+- No SSR — all data fetching via TanStack Query
+
+```typescript
+const api = app.addWorker("api", {
+  framework: "hono",
+  entrypoint: "./src/api/index.ts",
+  bindings: { DB: db },
+});
+
+const web = app.addWorker("web", {
+  framework: "tanstack",
+  entrypoint: "./src/web",
+  bindings: { API: api.asService() },
+});
+```
+
 ## Zero Lock-in
 
 Levi generates standard `wrangler.jsonc` files. At any point:

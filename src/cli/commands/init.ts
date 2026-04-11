@@ -9,7 +9,7 @@ import { resolve, basename } from "node:path";
 
 function getAppTemplate(
   projectName: string,
-  framework: "vinext" | "hono" | "raw",
+  framework: "vinext" | "tanstack" | "hono" | "raw",
 ): string {
   const header = `import { FlareApp } from "@flarefound/levi";\n\nconst app = new FlareApp("${projectName}", {\n  compatibility_date: "${new Date().toISOString().slice(0, 10)}",\n});\n`;
 
@@ -26,6 +26,33 @@ const web = app.addWorker("web", {
   bindings: {
     DB: db,
     CACHE: cache,
+  },
+});
+
+export default app;
+`;
+  }
+
+  if (framework === "tanstack") {
+    return `${header}
+// ── Storage ────────────────────────────────────────────────
+const db = app.addD1("main-db");
+
+// ── API (Hono) ─────────────────────────────────────────────
+const api = app.addWorker("api", {
+  framework: "hono",
+  entrypoint: "./src/api/index.ts",
+  bindings: {
+    DB: db,
+  },
+});
+
+// ── Web (TanStack SPA) ────────────────────────────────────
+const web = app.addWorker("web", {
+  framework: "tanstack",
+  entrypoint: "./src/web",
+  bindings: {
+    API: api.asService(),
   },
 });
 
@@ -91,11 +118,12 @@ export default defineCommand({
       type: "select",
       options: [
         { label: "vinext (recommended)", value: "vinext" },
+        { label: "TanStack SPA", value: "tanstack" },
         { label: "hono", value: "hono" },
         { label: "raw (no framework)", value: "raw" },
       ],
       initial: "vinext",
-    })) as "vinext" | "hono" | "raw";
+    })) as "vinext" | "tanstack" | "hono" | "raw";
 
     // ── Write levi.app.ts ──────────────────────────────────────
     const appFilePath = resolve(cwd, "levi.app.ts");

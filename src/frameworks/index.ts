@@ -120,6 +120,40 @@ export const vinextPreset: FrameworkPreset = {
 };
 
 // ---------------------------------------------------------------------------
+// Preset: TanStack SPA
+// ---------------------------------------------------------------------------
+
+/**
+ * TanStack SPA — Vite + React + TanStack Query + TanStack Router.
+ *
+ * A pure client-side SPA deployed as a Cloudflare Worker with static assets.
+ * No SSR — all data fetching via TanStack Query with service bindings to
+ * API workers.
+ *
+ * When `framework: "tanstack"` is set, Levi generates:
+ * - `assets` config for static file serving from dist/client/
+ * - Service binding configuration to connected API workers
+ */
+export const tanstackPreset: FrameworkPreset = {
+  name: "tanstack",
+  displayName: "TanStack SPA",
+  description: "Vite + React + TanStack Query + TanStack Router (pure SPA)",
+  defaultEntrypoint: "./src",
+  assets: {
+    directory: "./dist/client",
+    binding: "ASSETS",
+  },
+  templateFile: "levi.app.tanstack.ts",
+  wranglerOverrides: {
+    // TanStack SPA serves static assets from dist/client/
+    assets: {
+      directory: "./dist/client",
+      binding: "ASSETS",
+    },
+  },
+};
+
+// ---------------------------------------------------------------------------
 // Preset: Hono
 // ---------------------------------------------------------------------------
 
@@ -180,6 +214,7 @@ export const rawPreset: FrameworkPreset = {
  */
 export const frameworkPresets: Record<string, FrameworkPreset> = {
   vinext: vinextPreset,
+  tanstack: tanstackPreset,
   hono: honoPreset,
   raw: rawPreset,
 };
@@ -187,10 +222,11 @@ export const frameworkPresets: Record<string, FrameworkPreset> = {
 /**
  * Ordered list of framework presets for CLI prompts.
  *
- * vinext is listed first as the recommended default.
+ * vinext is listed first as the recommended default, followed by TanStack SPA.
  */
 export const frameworkChoices: FrameworkPreset[] = [
   vinextPreset,
+  tanstackPreset,
   honoPreset,
   rawPreset,
 ];
