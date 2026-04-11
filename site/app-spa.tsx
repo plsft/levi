@@ -23,6 +23,7 @@ const ServiceBindings = lazy(() => import("./app/docs/service-bindings/page"));
 const Environments = lazy(() => import("./app/docs/environments/page"));
 const CLI = lazy(() => import("./app/docs/cli/page"));
 const Vinext = lazy(() => import("./app/docs/vinext/page"));
+const TanStack = lazy(() => import("./app/docs/tanstack/page"));
 const Containers = lazy(() => import("./app/docs/containers/page"));
 const Pipelines = lazy(() => import("./app/docs/pipelines/page"));
 const BestPractices = lazy(() => import("./app/docs/best-practices/page"));
@@ -68,6 +69,7 @@ export function App() {
             <Route path="/docs/environments" element={<Environments />} />
             <Route path="/docs/cli" element={<CLI />} />
             <Route path="/docs/vinext" element={<Vinext />} />
+            <Route path="/docs/tanstack" element={<TanStack />} />
             <Route path="/docs/containers" element={<Containers />} />
             <Route path="/docs/pipelines" element={<Pipelines />} />
             <Route path="/docs/best-practices" element={<BestPractices />} />

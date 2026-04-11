@@ -9,3 +9,4 @@ routes = [
 [assets]
 directory = "./dist"
 binding = "ASSETS"
+fallback = "index.html"

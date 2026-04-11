@@ -43,7 +43,10 @@ const sections = [
   },
   {
     title: "Frameworks",
-    links: [{ href: "/docs/vinext", label: "vinext (Recommended)" }],
+    links: [
+      { href: "/docs/vinext", label: "vinext (Recommended)" },
+      { href: "/docs/tanstack", label: "TanStack SPA" },
+    ],
   },
   {
     title: "Beta",
