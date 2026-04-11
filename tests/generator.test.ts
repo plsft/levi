@@ -454,6 +454,38 @@ describe("WranglerGenerator — Vectorize binding", () => {
     expect(cfg.vectorize![0].binding).toBe("EMBEDDINGS");
     expect(cfg.vectorize![0].index_name).toBe("embeddings");
   });
+
+  it("uses indexId from options when provided", () => {
+    const app = makeApp();
+    const idx = app.addVectorize("embeddings", {
+      dimensions: 1536,
+      metric: "cosine",
+      indexId: "my-custom-index-id",
+    });
+    const w = app.addWorker("api", {
+      entrypoint: "./src/index.ts",
+      bindings: { EMBEDDINGS: idx },
+    });
+    const cfg = generate(app, w);
+
+    expect(cfg.vectorize).toBeDefined();
+    expect(cfg.vectorize![0].index_name).toBe("my-custom-index-id");
+  });
+
+  it("falls back to resource name when indexId is not provided", () => {
+    const app = makeApp();
+    const idx = app.addVectorize("my-index", {
+      dimensions: 768,
+      metric: "euclidean",
+    });
+    const w = app.addWorker("api", {
+      entrypoint: "./src/index.ts",
+      bindings: { VEC: idx },
+    });
+    const cfg = generate(app, w);
+
+    expect(cfg.vectorize![0].index_name).toBe("my-index");
+  });
 });
 
 // ---------------------------------------------------------------------------

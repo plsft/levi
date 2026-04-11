@@ -424,7 +424,7 @@ export class WranglerGenerator {
 
     config.vectorize.push({
       binding,
-      index_name: resource.name,
+      index_name: resource.options.indexId ?? resource.name,
     });
   }
 

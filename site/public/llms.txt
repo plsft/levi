@@ -1,0 +1,1183 @@
+# Levi — The AppHost Framework for Cloudflare
+
+> Declare your entire Cloudflare application in a single typed TypeScript file.
+> Levi generates wrangler configs, provisions resources, and deploys in dependency order.
+
+- Package: `@flarefound/levi`
+- Repository: https://github.com/plsft/levi
+- License: MIT
+- Current version: 0.1.4
+- Requires: Node.js >= 18, wrangler >= 3.0.0 (peer dependency)
+
+## What Levi Does
+
+Levi is an infrastructure-as-code framework for Cloudflare. You write a single `levi.app.ts` file that declares Workers, databases, storage, queues, AI, domains, and all bindings between them. Levi:
+
+1. Builds a dependency graph of all resources
+2. Generates valid `wrangler.jsonc` configs for each Worker
+3. Provisions Cloudflare resources (D1 databases, KV namespaces, R2 buckets, DNS records)
+4. Deploys Workers in topological order (dependencies first)
+5. Runs local dev with all bindings wired correctly
+
+Levi is a driver for Wrangler, not a replacement. It never reimplements what Wrangler does.
+
+## Quick Start
+
+```bash
+npm install -D @flarefound/levi wrangler
+npx levi init          # scaffold a new project (choose: vinext, hono, raw)
+npx levi dev           # local development with all bindings
+npx levi build         # generate wrangler.jsonc configs to .levi/
+npx levi deploy        # build + deploy in dependency order
+npx levi provision     # create D1/KV/R2/DNS resources via Cloudflare API
+npx levi graph         # print the dependency graph
+npx levi eject         # copy generated configs to project root (escape hatch)
+```
+
+## Core Concept: The App File
+
+Every Levi project has a `levi.app.ts` (or `.mts`, `.js`, `.mjs`) at the project root. It must default-export a `FlareApp` instance.
+
+```typescript
+import { FlareApp } from "@flarefound/levi";
+
+const app = new FlareApp("my-app", {
+  compatibility_date: "2026-04-01",
+});
+
+const db = app.addD1("main-db");
+const worker = app.addWorker("api", {
+  framework: "hono",
+  entrypoint: "./src/index.ts",
+  bindings: { DB: db },
+});
+
+export default app;
+```
+
+## FlareApp Constructor
+
+```typescript
+new FlareApp(name: string, options?: AppOptions)
+```
+
+### AppOptions
+
+| Property | Type | Default | Description |
+|---|---|---|---|
+| `account` | `string` | — | Cloudflare Account ID |
+| `compatibility_date` | `string` | `"2026-04-01"` | Default compat date for all Workers |
+| `compatibility_flags` | `string[]` | — | Default compat flags (e.g., `["nodejs_compat"]`) |
+| `environments` | `Record<string, EnvironmentConfig>` | — | Per-environment overrides |
+| `basePath` | `string` | — | Base directory for resolving relative paths |
+| `outDir` | `string` | `".levi"` | Output directory for generated configs |
+
+### EnvironmentConfig
+
+```typescript
+{
+  vars?: Record<string, string>;
+  secrets?: string[];
+  routes?: string[];
+  domain?: string;
+  compatibilityDate?: string;
+  compatibilityFlags?: string[];
+  bindings?: BindingMap;
+  limits?: { cpuMs?: number; memoryMb?: number };
+}
+```
+
+---
+
+## All Resource Types
+
+Levi supports 17 Cloudflare resource types. Each is created via a method on `FlareApp` and returns a resource object that can be passed to Worker bindings.
+
+### Workers — `app.addWorker(name, options)`
+
+The primary compute unit. Supports three frameworks:
+- `"hono"` — Hono web framework for APIs
+- `"vinext"` — Cloudflare's Vite-based framework for full-stack apps (recommended for web apps)
+- `"raw"` — No framework, exports fetch handler directly (default)
+
+```typescript
+const api = app.addWorker("api", {
+  framework: "hono",
+  entrypoint: "./src/index.ts",
+  bindings: { DB: db, CACHE: cache },
+  routes: ["api.example.com/*"],
+  crons: [{ pattern: "0 */6 * * *" }],
+  consumers: [{ queue: jobQueue, maxBatchSize: 10 }],
+  vars: { LOG_LEVEL: "info" },
+  secrets: ["API_KEY"],
+});
+```
+
+#### Full WorkerOptions
+
+| Property | Type | Default | Description |
+|---|---|---|---|
+| `framework` | `"hono" \| "vinext" \| "raw"` | `"raw"` | Application framework |
+| `entrypoint` | `string` | **required** | Path to Worker source file (or vinext project directory) |
+| `bindings` | `BindingMap` | — | Resource bindings available as `env.*` at runtime |
+| `routes` | `string[]` | — | URL route patterns (e.g., `["api.example.com/*"]`) |
+| `customDomains` | `string[]` | — | Custom domain names |
+| `crons` | `CronConfig[]` | — | Cron Triggers (invokes `scheduled` handler) |
+| `consumers` | `ConsumerConfig[]` | — | Queue consumers (invokes `queue` handler) |
+| `durableObjects` | `Record<string, DurableObjectClassConfig>` | — | DO classes hosted in this Worker |
+| `vars` | `Record<string, string>` | — | Plain-text environment variables |
+| `secrets` | `string[]` | — | Secret names (provisioned separately) |
+| `compatibilityDate` | `string` | — | Override app-level compat date |
+| `compatibilityFlags` | `string[]` | — | Override app-level compat flags |
+| `placement` | `{ mode: "smart" \| "off" }` | — | Smart Placement (run near your back-end) |
+| `limits` | `{ cpuMs?: number; memoryMb?: number }` | — | CPU/memory limits |
+| `logpush` | `boolean` | `false` | Enable Logpush |
+| `observability` | `{ enabled: boolean; headSamplingRate?: number }` | — | Tracing/observability |
+| `build` | `{ command?: string; cwd?: string; watchDir?: string \| string[] }` | — | Pre-build command |
+| `tailConsumers` | `string[]` | — | Tail Worker names |
+| `browser` | `boolean` | — | Browser Rendering API binding |
+| `analyticsEngineDatasets` | `Record<string, string>` | — | Analytics Engine bindings |
+| `mtlsCertificates` | `Record<string, string>` | — | mTLS cert bindings |
+| `serviceBindings` | `Record<string, string>` | — | Service bindings (alternative to `bindings`) |
+| `wrangler` | `Record<string, unknown>` | — | Escape hatch: raw wrangler.jsonc properties |
+
+#### CronConfig
+
+```typescript
+{ pattern: string; handler?: string }
+```
+
+Pattern is a standard cron expression (5 fields, UTC). Examples:
+- `"* * * * *"` — every minute
+- `"0 */6 * * *"` — every 6 hours
+- `"30 8 * * 1-5"` — weekdays at 08:30 UTC
+- `"0 0 1 * *"` — first of every month at midnight
+
+#### ConsumerConfig
+
+```typescript
+{
+  queue: QueueResource;         // required — the queue to consume
+  maxBatchSize?: number;        // 1-100, default: 10
+  maxRetries?: number;          // 0-100, default: 3
+  maxWaitMs?: number;           // 0-30000, default: 5000
+  deadLetterQueue?: QueueResource;
+  maxConcurrency?: number;      // 1-20, default: 1
+  retryDelay?: number;          // 0-43200 seconds
+}
+```
+
+#### Vinext-Specific Options
+
+When `framework: "vinext"`, additional options are available:
+
+```typescript
+app.addWorker("web", {
+  framework: "vinext",
+  entrypoint: "./packages/web",     // points to vinext project directory
+  assets: {
+    directory: "dist/client",        // default
+    binding: "ASSETS",               // default
+    htmlHandling: "auto-trailing-slash",
+    notFoundHandling: "single-page-application",
+    runWorkerFirst: false,
+  },
+  server: {
+    ssr: true,                       // default
+    preset: "cloudflare-workers",    // default
+    baseURL: "/",                    // default
+  },
+  assetsCaching: false,              // KV-based asset caching
+  assetsStorage: false,              // R2-based asset storage
+  bindings: { API: api.asService() },
+});
+```
+
+### D1 (Serverless SQLite) — `app.addD1(name, options?)`
+
+```typescript
+const db = app.addD1("main-db", {
+  migrations: "./migrations",        // path to migration SQL files
+  migrationsTable: "d1_migrations",  // default
+  databaseId: "existing-uuid",       // bind to existing DB
+  previewDatabaseId: "dev-uuid",     // for dev environment
+  locationHint: "enam",              // weur, enam, apac
+  readReplication: false,            // experimental read replicas
+});
+```
+
+Limits: 10 GB per database, single-threaded. Use multiple D1 databases for multi-tenant isolation.
+
+### KV (Key-Value Store) — `app.addKV(name, options?)`
+
+```typescript
+const cache = app.addKV("sessions", {
+  ttl: 3600,                         // default TTL in seconds (min: 60)
+  namespaceId: "existing-id",        // bind to existing namespace
+  previewId: "dev-id",               // for dev environment
+});
+```
+
+KV is eventually consistent (60-second propagation). Max 1 write/second per key. Max value size: 25 MB.
+
+### R2 (Object Storage) — `app.addR2(name, options?)`
+
+```typescript
+const uploads = app.addR2("user-uploads", {
+  allowedOrigins: ["https://example.com"],  // CORS origins
+  jurisdiction: "eu",                        // data residency (GDPR)
+  locationHint: "weur",                      // storage region hint
+  publicAccess: false,                       // public bucket access
+  bucketName: "existing-bucket",             // bind to existing bucket
+  lifecycleRules: [
+    { prefix: "temp/", expiration: { days: 7 } },
+    { prefix: "logs/", storageClassTransition: { days: 30, storageClass: "InfrequentAccess" } },
+    { abortIncompleteMultipartUploadDays: 3 },
+  ],
+});
+```
+
+R2 has zero egress fees. Single PUT max: 5 GB. Multipart max: 5 TB. Workers R2 binding is NOT S3 API compatible (use S3 API separately for external access).
+
+### Queues — `app.addQueue(name, options?)`
+
+```typescript
+const jobQueue = app.addQueue("background-jobs", {
+  deliveryDelay: 0,                  // 0-43200 seconds
+  retries: 3,                        // 0-100
+  deadLetterQueue: "jobs-dlq",       // name of another queue
+  queueId: "existing-uuid",          // bind to existing queue
+});
+```
+
+Message size: 128 KB. Batch max: 100 messages or 256 KB. At-least-once delivery.
+
+### Durable Objects — `app.addDurableObject(name, options)`
+
+```typescript
+const sessions = app.addDurableObject("RealtimeSession", {
+  className: "RealtimeSession",      // exported class name
+  sqlite: true,                      // enable SQL storage (recommended)
+  scriptName: "other-worker",        // external DO reference
+  environment: "production",         // external DO environment
+  locationHint: "enam",              // placement hint
+});
+```
+
+Durable Objects are globally unique, single-threaded, strongly consistent instances with co-located SQLite storage. Ideal for WebSocket rooms, collaborative editing, rate limiting, distributed locks.
+
+### Vectorize (Vector Database) — `app.addVectorize(name, options)`
+
+```typescript
+const embeddings = app.addVectorize("doc-embeddings", {
+  dimensions: 1536,                  // must match embedding model
+  metric: "cosine",                  // "cosine" | "euclidean" | "dot-product"
+  description: "Product embeddings via text-embedding-3-small",
+  indexId: "existing-uuid",          // bind to existing index
+});
+```
+
+Common dimensions: 384 (MiniLM), 768 (bge-base), 1536 (OpenAI small), 3072 (OpenAI large). Max 5M vectors per index (paid).
+
+### Hyperdrive (External Database Accelerator) — `app.addHyperdrive(name, options)`
+
+```typescript
+const legacyDb = app.addHyperdrive("legacy-postgres", {
+  connectionString: app.secret("DATABASE_URL"),  // or plain string
+  caching: {
+    disabled: false,
+    maxAge: 60,                      // seconds
+    staleWhileRevalidate: 15,        // seconds
+  },
+  localConnectionString: "postgres://localhost:5432/mydb_dev",
+  configId: "existing-uuid",         // bind to existing config
+});
+```
+
+Supports PostgreSQL and MySQL. Provides connection pooling and query caching at the edge.
+
+### Workers AI — `app.addWorkersAI(options?)`
+
+```typescript
+const ai = app.addWorkersAI();
+// or with custom binding name:
+const ai = app.addWorkersAI({ binding: "MODELS" });
+```
+
+Access serverless GPU inference for LLMs, embedding models, image generation, speech-to-text, and more.
+
+### AI Gateway — `app.addAIGateway(name, options)`
+
+```typescript
+const gateway = app.addAIGateway("my-gateway", {
+  id: "my-gateway",
+  rateLimiting: { enabled: true, limit: 100, period: 60 },
+  caching: { enabled: true, ttl: 3600 },
+  logCollection: { enabled: true },
+  alertsEnabled: false,
+});
+```
+
+Proxy for any AI API (Workers AI, OpenAI, Anthropic) with caching, rate limiting, and observability.
+
+### Domains — `app.addDomain(name, options?)`
+
+```typescript
+app.addDomain("example.com", {
+  ssl: "full_strict",                // "off" | "flexible" | "full" | "full_strict"
+  redirectWww: true,                 // 301 redirect www to apex
+  autoDns: true,                     // auto-provision DNS records
+  alwaysUseHttps: true,              // force HTTPS
+  minTlsVersion: "1.2",             // "1.0" | "1.1" | "1.2" | "1.3"
+  customHostname: false,             // Cloudflare for SaaS
+  zoneId: "zone-id",                 // explicit zone ID
+});
+```
+
+### Workflows — `app.addWorkflow(name, options)`
+
+```typescript
+const orderFlow = app.addWorkflow("order-processing", {
+  className: "OrderWorkflow",        // exported class extending WorkflowEntrypoint
+  scriptName: "other-worker",        // external workflow reference
+});
+```
+
+Durable, step-based execution. Each step is independently retryable. Survives crashes and restarts.
+
+### Tail Workers — `app.addTailWorker(name, options)`
+
+Consume log events from other Workers for custom logging/observability.
+
+### mTLS — `app.addMTLS(name, options)`
+
+Certificate bindings for mutual TLS authentication.
+
+### Containers (Beta) — `app.addContainer(name, options)`
+
+```typescript
+const container = app.addContainer("my-container", {
+  image: "./Dockerfile",             // Dockerfile path or image reference
+  className: "MyContainer",          // backing Durable Object class
+  instanceType: "basic",             // "lite" | "basic" | "standard-1" | "standard-2" | "standard-3" | "standard-4"
+  maxInstances: 10,                  // default: 20
+  buildContext: ".",                  // Docker build context
+  buildArgs: { NODE_ENV: "production" },
+  enableInternet: false,             // allow outbound network
+  defaultPort: 8080,                 // fetch communication port
+  sleepAfter: "10m",                 // inactivity timeout
+});
+```
+
+### Pipelines (Beta) — `app.addPipeline(name, options)`
+
+```typescript
+const pipeline = app.addPipeline("events", {
+  streamId: "my-event-stream",       // stream ID for writing events
+  schemaFile: "./schema.json",       // optional schema documentation
+});
+```
+
+Data ingestion, transformation, and delivery to R2.
+
+---
+
+## Bindings: Connecting Resources to Workers
+
+Bindings are how Workers access resources at runtime. In the `bindings` map, keys become `env.*` properties.
+
+```typescript
+const db = app.addD1("main-db");
+const cache = app.addKV("sessions");
+const uploads = app.addR2("uploads");
+const jobs = app.addQueue("jobs");
+const ai = app.addWorkersAI();
+const sessions = app.addDurableObject("Session", { className: "Session", sqlite: true });
+
+app.addWorker("api", {
+  framework: "hono",
+  entrypoint: "./src/index.ts",
+  bindings: {
+    DB: db,              // env.DB — D1 database
+    CACHE: cache,        // env.CACHE — KV namespace
+    UPLOADS: uploads,    // env.UPLOADS — R2 bucket
+    JOBS: jobs,          // env.JOBS — Queue producer
+    AI: ai,              // env.AI — Workers AI
+    SESSIONS: sessions,  // env.SESSIONS — Durable Object namespace
+  },
+});
+```
+
+Levi automatically tracks dependencies from bindings. When you bind a resource to a Worker, Levi ensures the resource is provisioned before the Worker is deployed.
+
+### Service Bindings (Worker-to-Worker RPC)
+
+Workers can call other Workers directly with zero network latency using service bindings:
+
+```typescript
+const api = app.addWorker("api", { ... });
+const web = app.addWorker("web", {
+  framework: "vinext",
+  entrypoint: "./web",
+  bindings: {
+    API: api.asService(),   // zero-latency RPC to api Worker
+  },
+});
+```
+
+In the web Worker's code: `env.API.fetch(request)` calls the API Worker directly.
+
+---
+
+## Secrets and Variables
+
+```typescript
+// Secrets — never written to config files, provisioned via `wrangler secret put`
+const dbUrl = app.secret("DATABASE_URL");
+
+// Variables — written to wrangler.jsonc vars block
+const logLevel = app.var("LOG_LEVEL", "info");
+```
+
+Use secrets for sensitive values (API keys, connection strings). Use vars for non-sensitive configuration.
+
+---
+
+## Complete Application Patterns
+
+### Pattern 1: Minimal API (Raw Worker + KV)
+
+```typescript
+import { FlareApp } from "@flarefound/levi";
+
+const app = new FlareApp("my-worker", {
+  compatibility_date: "2026-04-01",
+});
+
+const cache = app.addKV("cache");
+
+app.addWorker("api", {
+  entrypoint: "./src/index.ts",
+  bindings: { CACHE: cache },
+});
+
+export default app;
+```
+
+Worker code:
+```typescript
+export default {
+  async fetch(request: Request, env: Env) {
+    const value = await env.CACHE.get("key");
+    return new Response(value ?? "Hello from Levi!");
+  },
+};
+```
+
+### Pattern 2: Full-Stack Web App (vinext + D1)
+
+```typescript
+import { FlareApp } from "@flarefound/levi";
+
+const app = new FlareApp("my-app", {
+  compatibility_date: "2026-04-01",
+});
+
+const db = app.addD1("main-db", { migrations: "./migrations" });
+const sessions = app.addKV("sessions");
+
+app.addWorker("web", {
+  framework: "vinext",
+  entrypoint: "./src",
+  bindings: { DB: db, SESSIONS: sessions },
+  routes: ["example.com/*"],
+});
+
+app.addDomain("example.com", { ssl: "full_strict" });
+
+export default app;
+```
+
+### Pattern 3: API with Background Jobs (Hono + Queue)
+
+```typescript
+import { FlareApp } from "@flarefound/levi";
+
+const app = new FlareApp("my-api", {
+  compatibility_date: "2026-04-01",
+});
+
+const db = app.addD1("main-db", { migrations: "./migrations" });
+const storage = app.addR2("uploads", { allowedOrigins: ["https://example.com"] });
+const jobQueue = app.addQueue("background-jobs", { retries: 3 });
+
+const api = app.addWorker("api", {
+  framework: "hono",
+  entrypoint: "./src/index.ts",
+  bindings: { DB: db, STORAGE: storage, JOBS: jobQueue },
+  routes: ["api.example.com/*"],
+  crons: [{ pattern: "0 */6 * * *", handler: "cleanup" }],
+});
+
+app.addWorker("job-runner", {
+  entrypoint: "./src/jobs/index.ts",
+  bindings: { DB: db, STORAGE: storage },
+  consumers: [{
+    queue: jobQueue,
+    maxBatchSize: 10,
+    maxRetries: 3,
+    maxWaitMs: 5000,
+  }],
+});
+
+app.addDomain("api.example.com", { ssl: "full_strict" });
+
+export default app;
+```
+
+### Pattern 4: AI-Powered RAG Application
+
+```typescript
+import { FlareApp } from "@flarefound/levi";
+
+const app = new FlareApp("rag-app", {
+  compatibility_date: "2026-04-01",
+});
+
+const db = app.addD1("docs-db", { migrations: "./migrations" });
+const embeddings = app.addVectorize("doc-embeddings", {
+  dimensions: 1536,
+  metric: "cosine",
+});
+const ai = app.addWorkersAI();
+
+app.addWorker("api", {
+  framework: "hono",
+  entrypoint: "./src/index.ts",
+  bindings: { DB: db, EMBEDDINGS: embeddings, AI: ai },
+  routes: ["api.example.com/*"],
+});
+
+export default app;
+```
+
+### Pattern 5: Enterprise SaaS (Full-Stack Multi-Service)
+
+```typescript
+import { FlareApp } from "@flarefound/levi";
+
+const app = new FlareApp("acme-saas", {
+  account: process.env.CF_ACCOUNT_ID,
+  compatibility_date: "2026-04-01",
+  environments: {
+    staging: { domain: "staging.acme.com", vars: { LOG_LEVEL: "debug" } },
+    production: { domain: "acme.com", vars: { LOG_LEVEL: "warn" } },
+  },
+});
+
+// Storage
+const mainDb = app.addD1("main-db", { migrations: "./packages/db/migrations" });
+const sessionCache = app.addKV("sessions", { ttl: 3600 });
+const uploads = app.addR2("user-uploads", { allowedOrigins: ["https://acme.com"] });
+
+// Background jobs
+const jobQueue = app.addQueue("background-jobs", { retries: 3 });
+
+// Real-time coordination
+const realtimeSessions = app.addDurableObject("RealtimeSession", {
+  className: "RealtimeSession",
+  sqlite: true,
+});
+
+// AI inference
+const ai = app.addWorkersAI();
+
+// API backend (Hono)
+const api = app.addWorker("api", {
+  framework: "hono",
+  entrypoint: "./packages/api/src/index.ts",
+  bindings: {
+    DB: mainDb, SESSIONS: sessionCache, UPLOADS: uploads,
+    JOBS: jobQueue, REALTIME: realtimeSessions, AI: ai,
+  },
+  routes: ["api.acme.com/*"],
+  crons: [
+    { pattern: "0 */6 * * *", handler: "cleanup" },
+    { pattern: "30 8 * * 1-5", handler: "reports" },
+  ],
+});
+
+// Job runner
+app.addWorker("job-runner", {
+  entrypoint: "./packages/jobs/src/index.ts",
+  bindings: { DB: mainDb, UPLOADS: uploads, AI: ai },
+  consumers: [{ queue: jobQueue, maxBatchSize: 10, maxRetries: 3 }],
+});
+
+// Frontend (vinext) with service binding to API
+app.addWorker("web", {
+  framework: "vinext",
+  entrypoint: "./packages/web",
+  bindings: {
+    API: api.asService(),         // zero-latency RPC
+    SESSIONS: sessionCache,
+  },
+  routes: ["acme.com/*", "www.acme.com/*"],
+});
+
+// Domains
+app.addDomain("acme.com", { ssl: "full_strict", redirectWww: true });
+app.addDomain("api.acme.com", { ssl: "full_strict" });
+
+export default app;
+```
+
+### Pattern 6: Real-Time Collaboration (Durable Objects + WebSockets)
+
+```typescript
+import { FlareApp } from "@flarefound/levi";
+
+const app = new FlareApp("collab-app", {
+  compatibility_date: "2026-04-01",
+});
+
+const db = app.addD1("docs-db", { migrations: "./migrations" });
+const rooms = app.addDurableObject("CollabRoom", {
+  className: "CollabRoom",
+  sqlite: true,
+});
+
+app.addWorker("api", {
+  framework: "hono",
+  entrypoint: "./src/index.ts",
+  bindings: { DB: db, ROOMS: rooms },
+  routes: ["collab.example.com/*"],
+});
+
+export default app;
+```
+
+### Pattern 7: External Database with Hyperdrive
+
+```typescript
+import { FlareApp } from "@flarefound/levi";
+
+const app = new FlareApp("hybrid-app", {
+  compatibility_date: "2026-04-01",
+});
+
+const legacyDb = app.addHyperdrive("legacy-pg", {
+  connectionString: app.secret("LEGACY_PG_URL"),
+  caching: { maxAge: 120, staleWhileRevalidate: 30 },
+  localConnectionString: "postgres://localhost:5432/legacy_dev",
+});
+
+app.addWorker("api", {
+  framework: "hono",
+  entrypoint: "./src/index.ts",
+  bindings: { LEGACY_DB: legacyDb },
+});
+
+export default app;
+```
+
+### Pattern 8: Multi-Tenant SaaS with Per-Tenant D1
+
+```typescript
+import { FlareApp } from "@flarefound/levi";
+
+const app = new FlareApp("multi-tenant", {
+  compatibility_date: "2026-04-01",
+});
+
+// Each tenant gets their own 10GB D1 database
+// D1 pricing is per-query, not per-database — thousands of DBs are economical
+const tenantDb = app.addD1("tenant-db", { migrations: "./migrations" });
+const controlDb = app.addD1("control-plane-db", { migrations: "./migrations/control" });
+
+app.addWorker("api", {
+  framework: "hono",
+  entrypoint: "./src/index.ts",
+  bindings: { TENANT_DB: tenantDb, CONTROL_DB: controlDb },
+});
+
+export default app;
+```
+
+### Pattern 9: Workflow Orchestration
+
+```typescript
+import { FlareApp } from "@flarefound/levi";
+
+const app = new FlareApp("order-system", {
+  compatibility_date: "2026-04-01",
+});
+
+const db = app.addD1("orders-db", { migrations: "./migrations" });
+const orderFlow = app.addWorkflow("order-processing", {
+  className: "OrderWorkflow",
+});
+
+app.addWorker("api", {
+  framework: "hono",
+  entrypoint: "./src/index.ts",
+  bindings: { DB: db, ORDER_FLOW: orderFlow },
+});
+
+export default app;
+```
+
+### Pattern 10: AI Gateway with Observability
+
+```typescript
+import { FlareApp } from "@flarefound/levi";
+
+const app = new FlareApp("ai-app", {
+  compatibility_date: "2026-04-01",
+});
+
+const ai = app.addWorkersAI();
+const gateway = app.addAIGateway("llm-gateway", {
+  id: "llm-gateway",
+  rateLimiting: { enabled: true, limit: 1000, period: 60 },
+  caching: { enabled: true, ttl: 3600 },
+  logCollection: { enabled: true },
+});
+
+app.addWorker("api", {
+  framework: "hono",
+  entrypoint: "./src/index.ts",
+  bindings: { AI: ai, GATEWAY: gateway },
+});
+
+export default app;
+```
+
+---
+
+## Anti-Patterns (DO NOT DO THIS)
+
+### 1. Do NOT create circular dependencies
+
+```typescript
+// WRONG — creates a cycle, Levi will reject this
+const a = app.addWorker("a", { bindings: { B: b } });
+const b = app.addWorker("b", { bindings: { A: a } });
+```
+
+Use service bindings or a queue to decouple circular communication patterns.
+
+### 2. Do NOT use KV for sub-second updates
+
+```typescript
+// WRONG — KV is eventually consistent, 1 write/second per key
+const counters = app.addKV("counters");
+
+// RIGHT — use Durable Objects for real-time counters
+const counters = app.addDurableObject("Counter", {
+  className: "Counter",
+  sqlite: true,
+});
+```
+
+KV propagates writes globally in ~60 seconds. For real-time state, use Durable Objects.
+
+### 3. Do NOT put heavy processing in the API Worker
+
+```typescript
+// WRONG — blocks API responses, CPU limit risk
+app.addWorker("api", {
+  framework: "hono",
+  entrypoint: "./src/index.ts",
+  bindings: { DB: db },
+  // Image processing happens inline in request handler
+});
+
+// RIGHT — offload to a queue consumer
+const jobs = app.addQueue("processing-jobs");
+app.addWorker("api", {
+  framework: "hono",
+  entrypoint: "./src/index.ts",
+  bindings: { DB: db, JOBS: jobs },
+});
+app.addWorker("processor", {
+  entrypoint: "./src/processor.ts",
+  bindings: { DB: db },
+  consumers: [{ queue: jobs, maxBatchSize: 5 }],
+});
+```
+
+### 4. Do NOT hardcode secrets in the app file
+
+```typescript
+// WRONG — secrets in source code
+app.addHyperdrive("pg", {
+  connectionString: "postgres://user:password@host:5432/db",
+});
+
+// RIGHT — use secret references
+app.addHyperdrive("pg", {
+  connectionString: app.secret("DATABASE_URL"),
+});
+```
+
+### 5. Do NOT use process.env for Cloudflare bindings in Worker code
+
+```typescript
+// WRONG — process.env does not work for Cloudflare bindings
+const db = process.env.DB;
+
+// RIGHT — use the env parameter from the fetch handler
+export default {
+  async fetch(request: Request, env: Env) {
+    const result = await env.DB.prepare("SELECT * FROM users").all();
+  },
+};
+
+// RIGHT (Hono) — use c.env
+app.get("/users", async (c) => {
+  const result = await c.env.DB.prepare("SELECT * FROM users").all();
+});
+```
+
+### 6. Do NOT forget to export default
+
+```typescript
+// WRONG — Levi cannot find the app
+const app = new FlareApp("my-app");
+// ... resources and workers ...
+// missing: export default app;
+
+// RIGHT
+export default app;
+```
+
+### 7. Do NOT create resources without binding them to a Worker
+
+```typescript
+// WRONG — resource exists but no Worker can access it
+const db = app.addD1("orphan-db");
+// never used in any bindings
+
+// RIGHT — always bind resources to at least one Worker
+const db = app.addD1("main-db");
+app.addWorker("api", {
+  entrypoint: "./src/index.ts",
+  bindings: { DB: db },
+});
+```
+
+### 8. Do NOT use a single D1 database for everything at scale
+
+```typescript
+// WRONG at scale — D1 is 10GB max, single-threaded
+const db = app.addD1("everything-db");
+
+// RIGHT — separate concerns into multiple databases
+const usersDb = app.addD1("users-db");
+const analyticsDb = app.addD1("analytics-db");
+const contentDb = app.addD1("content-db");
+```
+
+### 9. Do NOT deploy API and frontend on the same Worker
+
+```typescript
+// WRONG — couples deployment, scaling, and failure domains
+app.addWorker("everything", {
+  framework: "vinext",
+  entrypoint: "./src",
+  // API routes mixed with frontend
+});
+
+// RIGHT — separate Workers with service binding
+const api = app.addWorker("api", {
+  framework: "hono",
+  entrypoint: "./packages/api/src/index.ts",
+  bindings: { DB: db },
+});
+app.addWorker("web", {
+  framework: "vinext",
+  entrypoint: "./packages/web",
+  bindings: { API: api.asService() },
+});
+```
+
+### 10. Do NOT ignore the wrangler escape hatch
+
+```typescript
+// When Levi doesn't yet support a new Wrangler feature, use the escape hatch:
+app.addWorker("api", {
+  entrypoint: "./src/index.ts",
+  wrangler: {
+    upload_source_maps: true,
+    no_bundle: true,
+    // Any valid wrangler.jsonc property works here
+  },
+});
+```
+
+### 11. Do NOT use r2.dev URLs in production
+
+```typescript
+// WRONG — r2.dev URLs are rate-limited
+// Use custom domains for R2 in production
+
+// RIGHT — use Worker bindings or a custom domain in front of R2
+const storage = app.addR2("assets");
+app.addWorker("cdn", {
+  entrypoint: "./src/cdn.ts",
+  bindings: { ASSETS: storage },
+  routes: ["cdn.example.com/*"],
+});
+```
+
+### 12. Do NOT store request-specific state in global scope
+
+```typescript
+// WRONG — Workers share global state across requests
+let currentUser = null;
+export default {
+  async fetch(request, env) {
+    currentUser = await getUser(request);
+    // Another concurrent request may overwrite currentUser!
+  },
+};
+
+// RIGHT — keep state per-request
+export default {
+  async fetch(request, env) {
+    const currentUser = await getUser(request);
+    return handleRequest(request, env, currentUser);
+  },
+};
+```
+
+---
+
+## Cloudflare Platform Limits Reference
+
+| Service | Limit | Free | Paid |
+|---|---|---|---|
+| Workers CPU time | per invocation | 10ms | 30s (configurable to 5min) |
+| Workers memory | per isolate | 128 MB | 128 MB |
+| Workers script size | compressed | 3 MB | 10 MB |
+| Workers subrequests | per invocation | 50 | 1,000+ |
+| D1 database size | per database | 500 MB | 10 GB |
+| KV value size | per value | 25 MB | 25 MB |
+| KV writes | per key | 1/second | 1/second |
+| R2 single PUT | per request | 5 GB | 5 GB |
+| R2 multipart | per object | 5 TB | 5 TB |
+| Queue message size | per message | 128 KB | 128 KB |
+| Queue batch | per delivery | 100 messages / 256 KB | 100 messages / 256 KB |
+| Durable Object storage | per instance | 1 GB | 10 GB |
+| Vectorize vectors | per index | 200,000 | 5,000,000 |
+| Vectorize dimensions | per index | 1-65536 | 1-65536 |
+
+---
+
+## How Levi Generates Configuration
+
+When you run `levi build`, Levi:
+
+1. Loads your `levi.app.ts` using jiti (TypeScript runtime loader)
+2. Validates the dependency graph (no cycles, no dangling references)
+3. Generates one `wrangler.jsonc` per Worker in `.levi/workers/<name>/wrangler.jsonc`
+4. Generates `.levi/graph.json` with the full serialized dependency graph
+5. All generated configs are standalone, valid Wrangler configs
+
+You can eject from Levi at any time by running `levi eject`, which copies the generated configs to your project root.
+
+### Generated Config Structure
+
+```
+.levi/
+  graph.json                          # dependency graph
+  workers/
+    api/
+      wrangler.jsonc                  # valid wrangler config for api Worker
+    web/
+      wrangler.jsonc                  # valid wrangler config for web Worker
+    job-runner/
+      wrangler.jsonc                  # valid wrangler config for job-runner Worker
+```
+
+---
+
+## CLI Reference
+
+| Command | Description |
+|---|---|
+| `levi init` | Scaffold new project. Options: `--template vinext\|hono\|raw` |
+| `levi build` | Generate `wrangler.jsonc` configs to `.levi/` |
+| `levi dev` | Local development with all Workers and bindings |
+| `levi deploy` | Build + deploy all Workers in dependency order |
+| `levi deploy --only api` | Deploy only the named Worker |
+| `levi deploy --env staging` | Deploy to a specific environment |
+| `levi provision` | Create D1/KV/R2/DNS resources via Cloudflare API |
+| `levi graph` | Print dependency graph to terminal |
+| `levi diff` | Show config changes vs. current deployment |
+| `levi eject` | Copy generated configs to project root (escape hatch) |
+| `levi dashboard` | Topology dashboard (coming soon) |
+
+---
+
+## Framework Integration Details
+
+### Hono Workers
+
+Hono Workers use `c.env` to access bindings:
+
+```typescript
+import { Hono } from "hono";
+
+type Env = {
+  DB: D1Database;
+  CACHE: KVNamespace;
+  JOBS: Queue;
+};
+
+const app = new Hono<{ Bindings: Env }>();
+
+app.get("/users", async (c) => {
+  const { results } = await c.env.DB.prepare("SELECT * FROM users").all();
+  return c.json(results);
+});
+
+app.post("/jobs", async (c) => {
+  await c.env.JOBS.send({ type: "process", data: await c.req.json() });
+  return c.json({ status: "queued" });
+});
+
+export default app;
+```
+
+### vinext Workers
+
+vinext Workers use Cloudflare's Vite-based framework. The entrypoint points to the vinext project directory, and Levi auto-configures SSR, static assets, and `nodejs_compat`:
+
+```typescript
+// In vinext server routes, access bindings via the platform context
+export async function loader({ context }) {
+  const db = context.cloudflare.env.DB;
+  const users = await db.prepare("SELECT * FROM users").all();
+  return { users: users.results };
+}
+```
+
+### Raw Workers
+
+Raw Workers export handlers directly:
+
+```typescript
+export default {
+  async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
+    return new Response("Hello World");
+  },
+  async scheduled(controller: ScheduledController, env: Env, ctx: ExecutionContext) {
+    // Cron trigger handler
+  },
+  async queue(batch: MessageBatch, env: Env, ctx: ExecutionContext) {
+    // Queue consumer handler
+    for (const message of batch.messages) {
+      // process message
+      message.ack();
+    }
+  },
+};
+```
+
+---
+
+## Environment Management
+
+```typescript
+const app = new FlareApp("my-app", {
+  environments: {
+    staging: {
+      domain: "staging.example.com",
+      vars: { LOG_LEVEL: "debug", API_URL: "https://staging-api.example.com" },
+      routes: ["staging.example.com/*"],
+    },
+    production: {
+      domain: "example.com",
+      vars: { LOG_LEVEL: "warn", API_URL: "https://api.example.com" },
+      routes: ["example.com/*"],
+    },
+  },
+});
+```
+
+Deploy to specific environments:
+
+```bash
+npx levi deploy --env staging
+npx levi deploy --env production
+```
+
+---
+
+## TypeScript Imports
+
+```typescript
+// Core
+import { FlareApp, AppGraph, WranglerGenerator, loadApp } from "@flarefound/levi";
+
+// Resource classes
+import {
+  WorkerResource, D1Resource, KVResource, R2Resource, QueueResource,
+  DurableObjectResource, VectorizeResource, HyperdriveResource,
+  WorkersAIResource, AIGatewayResource, DomainResource,
+  WorkflowResource, ContainerResource, PipelineResource,
+} from "@flarefound/levi";
+
+// Types only
+import type {
+  AppOptions, WorkerOptions, VinextWorkerOptions,
+  D1Options, KVOptions, R2Options, QueueOptions,
+  DurableObjectOptions, VectorizeOptions, HyperdriveOptions,
+  WorkersAIOptions, AIGatewayOptions, DomainOptions,
+  WorkflowOptions, ContainerOptions, PipelineOptions,
+  CronConfig, ConsumerConfig, BindingMap, EnvironmentConfig,
+  ResourceType, Framework, BuildResult,
+} from "@flarefound/levi";
+
+// Types subpath
+import type { ResourceType, Framework } from "@flarefound/levi/types";
+```
+
+---
+
+## Architecture Principles
+
+1. **Levi is a driver for Wrangler, not a replacement.** It generates configs and shells out to Wrangler for dev and deploy.
+2. **Zero lock-in.** Generated `wrangler.jsonc` files are standalone. Run `levi eject` to leave Levi behind.
+3. **Type safety.** Every resource, option, and binding is fully typed in TypeScript.
+4. **Dependency-aware.** The graph ensures resources are provisioned and deployed in the correct order.
+5. **Framework-agnostic.** Use Hono, vinext, or raw Workers — Levi adapts its config generation to each.
+6. **Escape hatch.** The `wrangler` property on WorkerOptions lets you pass arbitrary wrangler.jsonc properties for features Levi doesn't yet model.
+
+---
+
+## File Naming Convention
+
+| File | Purpose |
+|---|---|
+| `levi.app.ts` | App declaration (default, also `.mts`, `.js`, `.mjs`) |
+| `.levi/` | Generated output directory |
+| `.levi/graph.json` | Serialized dependency graph |
+| `.levi/workers/<name>/wrangler.jsonc` | Generated Wrangler config per Worker |
+
+---
+
+## Common Mistakes When Using Levi with AI
+
+1. **Forgetting `export default app`** — The app file MUST default-export the FlareApp instance.
+2. **Using `new FlareApp()` without a name** — The first argument (app name) is required.
+3. **Setting `framework: "vinext"` with a file entrypoint** — vinext entrypoint should be a directory, not a file.
+4. **Binding a resource to itself** — Resources cannot reference themselves in bindings.
+5. **Using `app.addQueue()` without a consumer** — Queues need a Worker with `consumers` to process messages.
+6. **Declaring Durable Objects without `className`** — The `className` property is required and must match the exported class.
+7. **Using wrong Vectorize dimensions** — The `dimensions` must exactly match your embedding model's output size.
+8. **Not separating API and frontend Workers** — Use service bindings (`api.asService()`) to connect them.
+9. **Passing KV TTL below 60** — Cloudflare KV requires TTL >= 60 seconds.
+10. **Using secrets in vars** — `vars` are written to config files in plain text. Use `secrets` or `app.secret()` for sensitive values.

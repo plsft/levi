@@ -31,14 +31,28 @@ export default defineCommand({
       description: "Path to app file (default: levi.app.ts)",
       alias: "a",
     },
+    env: {
+      type: "string",
+      description: "Target environment (e.g., staging, production)",
+      alias: "e",
+    },
     filter: {
       type: "string",
       description: "Run only specific workers (comma-separated names)",
       alias: "f",
     },
+    port: {
+      type: "string",
+      description: "Base port for the first worker",
+      alias: "p",
+    },
   },
   async run({ args }) {
-    const appPath = args.app || "levi.app.ts";
+    const appPath = (args.app as string) || "levi.app.ts";
+    const env = args.env as string | undefined;
+    const filter = args.filter as string | undefined;
+    const portArg = args.port as string | undefined;
+    const port = portArg ? parseInt(portArg, 10) : undefined;
 
     // ── Build first ────────────────────────────────────────────
     consola.start("Building Levi app...");
@@ -47,20 +61,14 @@ export default defineCommand({
     try {
       app = await loadApp(appPath);
     } catch (error) {
-      consola.error(
-        `Failed to load app file: ${appPath}`,
-        error instanceof Error ? error.message : error,
-      );
+      consola.error(`Failed to load app file: ${appPath}`, error instanceof Error ? error.message : error);
       process.exit(1);
     }
 
     try {
       app.build();
     } catch (error) {
-      consola.error(
-        "App graph validation failed:",
-        error instanceof Error ? error.message : error,
-      );
+      consola.error("App graph validation failed:", error instanceof Error ? error.message : error);
       process.exit(1);
     }
 
@@ -68,16 +76,11 @@ export default defineCommand({
     let workers = graph.nodes.filter((n) => n.type === "worker");
 
     // ── Apply filter ───────────────────────────────────────────
-    if (args.filter) {
-      const filterNames = args.filter.split(",").map((n) => n.trim());
+    if (filter) {
+      const filterNames = filter.split(",").map((n: string) => n.trim());
       workers = workers.filter((w) => filterNames.includes(w.name));
       if (workers.length === 0) {
-        consola.error(
-          `No workers matched filter: ${args.filter}. Available: ${graph.nodes
-            .filter((n) => n.type === "worker")
-            .map((n) => n.name)
-            .join(", ")}`,
-        );
+        consola.error(`No workers matched filter: ${filter}. Available: ${graph.nodes.filter((n) => n.type === "worker").map((n) => n.name).join(", ")}`);
         process.exit(1);
       }
     }
@@ -85,7 +88,8 @@ export default defineCommand({
     // ── Generate configs ───────────────────────────────────────
     const generator = new WranglerGenerator(app);
     const configs = generator.generateAll();
-    const outDir = resolve(process.cwd(), app.options.outDir || ".levi");
+    const baseOutDir = app.options.outDir || ".levi";
+    const outDir = env ? resolve(baseOutDir, env) : baseOutDir;
 
     for (const [workerName, config] of configs) {
       const configPath = resolve(outDir, "workers", workerName, "wrangler.jsonc");
@@ -96,13 +100,14 @@ export default defineCommand({
     // Write graph.json
     const graphPath = resolve(outDir, "graph.json");
     mkdirSync(dirname(graphPath), { recursive: true });
-    writeFileSync(graphPath, JSON.stringify(graph, null, 2));
+    writeFileSync(graphPath, JSON.stringify(graph.serialize(), null, 2));
 
-    consola.success(`Built ${workers.length} worker config(s)`);
+    consola.success(`Built ${workers.length} worker config(s) to ${env ? `${env}/` : ""}.levi/`);
 
     // ── Spawn wrangler dev for each worker ─────────────────────
     const children: ChildProcess[] = [];
     const maxNameLen = Math.max(...workers.map((w) => w.name.length));
+    const basePort = port || 8787;
 
     for (let i = 0; i < workers.length; i++) {
       const worker = workers[i];
@@ -114,11 +119,12 @@ export default defineCommand({
         continue;
       }
 
+      const workerPort = basePort + i;
       const prefix = `${color}[${worker.name.padEnd(maxNameLen)}]${RESET}`;
 
-      consola.info(`${prefix} Starting wrangler dev...`);
+      consola.info(`${prefix} Starting wrangler dev on port ${workerPort}...`);
 
-      const child = spawn("npx", ["wrangler", "dev", "--config", configPath], {
+      const child = spawn("npx", ["wrangler", "dev", "--config", configPath, "--port", String(workerPort)], {
         stdio: ["ignore", "pipe", "pipe"],
         shell: true,
         cwd: process.cwd(),

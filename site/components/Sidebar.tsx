@@ -55,6 +55,7 @@ const sections = [
   {
     title: "Reference",
     links: [
+      { href: "/docs/best-practices", label: "Best Practices" },
       { href: "/docs/cli", label: "CLI Commands" },
       { href: "/examples", label: "Examples" },
     ],

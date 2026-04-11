@@ -115,8 +115,13 @@ const categories = [
   },
   {
     title: "Reference",
-    description: "CLI commands, API reference, and examples",
+    description: "CLI commands, best practices, and examples",
     cards: [
+      {
+        href: "/docs/best-practices",
+        title: "Best Practices",
+        desc: "Platform limits, pricing traps, architecture patterns, and deployment gotchas.",
+      },
       {
         href: "/docs/cli",
         title: "CLI Commands",

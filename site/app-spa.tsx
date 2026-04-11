@@ -25,6 +25,7 @@ const CLI = lazy(() => import("./app/docs/cli/page"));
 const Vinext = lazy(() => import("./app/docs/vinext/page"));
 const Containers = lazy(() => import("./app/docs/containers/page"));
 const Pipelines = lazy(() => import("./app/docs/pipelines/page"));
+const BestPractices = lazy(() => import("./app/docs/best-practices/page"));
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -69,6 +70,7 @@ export function App() {
             <Route path="/docs/vinext" element={<Vinext />} />
             <Route path="/docs/containers" element={<Containers />} />
             <Route path="/docs/pipelines" element={<Pipelines />} />
+            <Route path="/docs/best-practices" element={<BestPractices />} />
           </Routes>
         </Suspense>
       </main>

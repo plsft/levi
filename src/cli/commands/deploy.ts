@@ -5,6 +5,11 @@ import { resolve, dirname } from "node:path";
 import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { loadApp } from "../../loader.js";
 import { WranglerGenerator } from "../../generators/wrangler.js";
+import { runProvision } from "./provision.js";
+import { D1Resource } from "../../resources/d1.js";
+import { KVResource } from "../../resources/kv.js";
+import { R2Resource } from "../../resources/r2.js";
+import { VectorizeResource } from "../../resources/vectorize.js";
 
 /**
  * Topological sort of worker nodes by their dependencies.
@@ -86,12 +91,17 @@ export default defineCommand({
       description: "Do not wait for deployment to finish",
       default: false,
     },
+    "skip-provision": {
+      type: "boolean",
+      description: "Skip resource provisioning before deploying",
+      default: false,
+    },
   },
   async run({ args }) {
     const appPath = args.app || "levi.app.ts";
 
-    // ── Build first ────────────────────────────────────────────
-    consola.start("Building Levi app...");
+    // ── Load app ────────────────────────────────────────────────
+    consola.start("Loading Levi app...");
 
     let app;
     try {
@@ -132,23 +142,66 @@ export default defineCommand({
       }
     }
 
-    // ── Generate configs ───────────────────────────────────────
-    const generator = new WranglerGenerator(app);
-    const configs = generator.generateAll();
     const outDir = resolve(process.cwd(), app.options.outDir || ".levi");
 
-    for (const [workerName, config] of configs) {
+    // ── Generate initial configs (no real IDs yet) ───────────────
+    const generator = new WranglerGenerator(app);
+    const initialConfigs = generator.generateAll();
+
+    for (const [workerName, config] of initialConfigs) {
       const configPath = resolve(outDir, "workers", workerName, "wrangler.jsonc");
       mkdirSync(dirname(configPath), { recursive: true });
       writeFileSync(configPath, WranglerGenerator.serialize(config));
     }
 
-    // Write graph.json
     const graphPath = resolve(outDir, "graph.json");
     mkdirSync(dirname(graphPath), { recursive: true });
     writeFileSync(graphPath, JSON.stringify(graph, null, 2));
 
     consola.success(`Built ${workers.length} worker config(s)`);
+
+    // ── Provision resources ────────────────────────────────────
+    if (!args["skip-provision"]) {
+      consola.start("Provisioning resources...");
+      const { provisionable, failed } = await runProvision(app);
+
+      if (failed.length > 0) {
+        consola.error(`Provisioning failed for ${failed.length} resource(s):`);
+        for (const f of failed) {
+          consola.error(`  ${f.type}: ${f.name}`);
+        }
+        process.exit(1);
+      }
+
+      // Inject real IDs back into resource options so re-generated configs have them
+      for (const p of provisionable) {
+        const resource = graph.nodes.find((n) => n.name === p.name);
+        if (!resource || !p.id) continue;
+
+        if (resource instanceof D1Resource) {
+          (resource.options as D1Resource["options"]).databaseId = p.id;
+        } else if (resource instanceof KVResource) {
+          (resource.options as KVResource["options"]).namespaceId = p.id;
+        } else if (resource instanceof R2Resource) {
+          (resource.options as R2Resource["options"]).bucketName = p.id;
+        } else if (resource instanceof VectorizeResource) {
+          (resource.options as VectorizeResource["options"]).indexId = p.id;
+        }
+      }
+
+      // ── Re-generate configs with real IDs ─────────────────────
+      consola.start("Re-generating configs with real resource IDs...");
+      const updatedGenerator = new WranglerGenerator(app);
+      const updatedConfigs = updatedGenerator.generateAll();
+
+      for (const [workerName, config] of updatedConfigs) {
+        const configPath = resolve(outDir, "workers", workerName, "wrangler.jsonc");
+        writeFileSync(configPath, WranglerGenerator.serialize(config));
+      }
+      consola.success("Configs updated with real resource IDs");
+
+      writeFileSync(graphPath, JSON.stringify(graph.serialize(), null, 2));
+    }
 
     // ── Topological sort ───────────────────────────────────────
     const sorted = topologicalSort(workers.map((w) => w.toGraphNode()));

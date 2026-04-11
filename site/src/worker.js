@@ -9,8 +9,12 @@ export default {
     // serve index.html so client-side routing can handle it
     if (response.status === 404 && !url.pathname.includes(".")) {
       const indexRequest = new Request(new URL("/index.html", url.origin), request);
-      const indexResponse = await env.ASSETS.fetch(indexRequest);
-      if (indexResponse.status === 200) {
+      let indexResponse = await env.ASSETS.fetch(indexRequest);
+      // ASSETS may redirect (307) to the canonical path — follow it
+      if (indexResponse.status >= 300 && indexResponse.status < 400) {
+        indexResponse = await env.ASSETS.fetch(indexResponse.url || indexRequest);
+      }
+      if (indexResponse.ok) {
         return new Response(indexResponse.body, {
           status: 200,
           headers: addSecurityHeaders(new Headers(indexResponse.headers)),

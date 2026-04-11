@@ -80,7 +80,7 @@ export default function CLIReferencePage() {
         <h3 style={{ marginTop: 0 }} className="text-sm font-bold text-denim-300 uppercase tracking-widest mb-3">
           All Commands
         </h3>
-        <div className="grid sm:grid-cols-3 gap-2 text-sm">
+          <div className="grid sm:grid-cols-3 gap-2 text-sm">
           <div><code className="inline-code">levi init</code> <span className="text-denim-400 ml-1">scaffold</span></div>
           <div><code className="inline-code">levi build</code> <span className="text-denim-400 ml-1">compile</span></div>
           <div><code className="inline-code">levi dev</code> <span className="text-denim-400 ml-1">local dev</span></div>
@@ -89,7 +89,7 @@ export default function CLIReferencePage() {
           <div><code className="inline-code">levi graph</code> <span className="text-denim-400 ml-1">visualize</span></div>
           <div><code className="inline-code">levi eject</code> <span className="text-denim-400 ml-1">escape hatch</span></div>
           <div><code className="inline-code">levi diff</code> <span className="text-denim-400 ml-1">compare</span></div>
-          <div><code className="inline-code">levi dashboard</code> <span className="text-denim-400 ml-1">Phase 3</span></div>
+          <div><code className="inline-code">levi dashboard</code> <span className="text-denim-400 ml-1">TUI</span></div>
         </div>
       </div>
 
@@ -183,8 +183,8 @@ export default function CLIReferencePage() {
         <FlagTable
           flags={[
             { flag: "--config", alias: "-c", desc: "Path to app definition file", default: "levi.app.ts" },
-            { flag: "--outdir", alias: "-o", desc: "Output directory for build artifacts", default: ".levi/" },
-            { flag: "--verbose", alias: "-v", desc: "Show detailed build steps", default: "false" },
+            { flag: "--env", alias: "-e", desc: "Target environment (e.g., production, staging)", default: "none" },
+            { flag: "--filter", alias: "-f", desc: "Build only specific workers (comma-separated)", default: "all" },
           ]}
         />
 
@@ -192,27 +192,22 @@ export default function CLIReferencePage() {
           <span className="syn-fn">$</span>{" "}
           <span className="syn-const">levi build</span>
           {"\n\n"}
-          {"  Parsing levi.app.ts..."}{"\n"}
-          {"  Building App Graph: 5 resources, 7 bindings"}{"\n"}
-          {"  Topological sort: main-db -> cache -> uploads -> api -> web"}{"\n"}
-          {"  Generating configs..."}{"\n"}
-          {"    .levi/api/wrangler.jsonc"}{"\n"}
-          {"    .levi/web/wrangler.jsonc"}{"\n"}
-          {"    .levi/background/wrangler.jsonc"}{"\n"}
-          {"    .levi/graph.json"}{"\n"}
-          {"    .levi/provision-plan.json"}{"\n\n"}
-          <span className="syn-str">{"  Build complete (143ms)"}</span>
+          {"  Building Levi app...\n"}{"\n"}
+          {"  \u2713 Generated api/wrangler.jsonc\n"}{"\n"}
+          {"  \u2713 Generated web/wrangler.jsonc\n"}{"\n"}
+          {"  \u2713 Generated graph.json\n"}{"\n"}
+          {"  Build complete: 2 worker(s), 5 total resource(s)\n"}
         </CodeBlock>
 
         <h3>Output Structure</h3>
         <p>
           The <code className="inline-code">.levi/</code> directory contains
           one subdirectory per worker, each with a{" "}
-          <code className="inline-code">wrangler.jsonc</code>. It also
+          <code className="inline-code">wrangler.jsonc</code>. With{" "}
+          <code className="inline-code">--env staging</code>, output goes to{" "}
+          <code className="inline-code">.levi/staging/</code>. The directory also
           contains <code className="inline-code">graph.json</code> (the
-          serialized DAG) and{" "}
-          <code className="inline-code">provision-plan.json</code> (the list
-          of resources that need to be created on Cloudflare).
+          serialized DAG).
         </p>
       </CommandSection>
 
@@ -231,11 +226,9 @@ export default function CLIReferencePage() {
 
         <FlagTable
           flags={[
+            { flag: "--env", alias: "-e", desc: "Target environment (e.g., staging, production)", default: "none" },
             { flag: "--filter", alias: "-f", desc: "Run only specific workers (comma-separated)", default: "all" },
             { flag: "--port", alias: "-p", desc: "Base port for the first worker", default: "8787" },
-            { flag: "--local", desc: "Force local-only mode (no remote bindings)", default: "true" },
-            { flag: "--remote", desc: "Use remote Cloudflare bindings for dev", default: "false" },
-            { flag: "--verbose", alias: "-v", desc: "Show wrangler output for all workers", default: "false" },
           ]}
         />
 
@@ -243,10 +236,11 @@ export default function CLIReferencePage() {
           <span className="syn-fn">$</span>{" "}
           <span className="syn-const">levi dev</span>
           {"\n\n"}
-          {"  Starting 3 workers..."}{"\n"}
-          {"    api       -> http://localhost:8787"}{"\n"}
-          {"    web       -> http://localhost:8788"}{"\n"}
-          {"    background -> (queue consumer, no HTTP)"}{"\n\n"}
+          {"  [api] Starting wrangler dev on port 8787...\n"}{"\n"}
+          {"  [web] Starting wrangler dev on port 8788...\n"}{"\n"}
+          {"  [worker] Starting wrangler dev on port 8789...\n\n"}{"\n"}
+          {"  Built 3 worker config(s) to .levi/\n"}{"\n"}
+          {"  Running 3 worker(s) in dev mode. Press Ctrl+C to stop.\n"}{"\n"}
           {"  Service bindings active: web -> api"}{"\n"}
           <span className="syn-str">{"  Ready. Watching for changes..."}</span>
         </CodeBlock>
@@ -289,7 +283,6 @@ export default function CLIReferencePage() {
             { flag: "--env", alias: "-e", desc: "Target environment", default: "production" },
             { flag: "--filter", alias: "-f", desc: "Deploy only specific workers", default: "all" },
             { flag: "--detach", alias: "-d", desc: "Don't wait for deployment to complete", default: "false" },
-            { flag: "--dry-run", desc: "Show what would be deployed without deploying", default: "false" },
             { flag: "--skip-provision", desc: "Skip resource provisioning step", default: "false" },
           ]}
         />
@@ -298,17 +291,43 @@ export default function CLIReferencePage() {
           <span className="syn-fn">$</span>{" "}
           <span className="syn-const">levi deploy --env production</span>
           {"\n\n"}
-          {"  Building App Graph..."}{"\n"}
-          {"  Provisioning resources..."}{"\n"}
-          {"    D1: main-db           [exists]"}{"\n"}
-          {"    KV: cache             [exists]"}{"\n"}
-          {"    R2: uploads           [created]"}{"\n"}
-          {"    Queue: background-tasks [exists]"}{"\n\n"}
-          {"  Deploying workers (topological order)..."}{"\n"}
-          {"    [1/3] api             deployed  https://api.acme.workers.dev"}{"\n"}
-          {"    [2/3] background      deployed  (queue consumer)"}{"\n"}
-          {"    [3/3] web             deployed  https://web.acme.workers.dev"}{"\n\n"}
-          <span className="syn-str">{"  All 3 workers deployed successfully."}</span>
+          {"  Loading Levi app..."}{"\n"}
+          {"  ✓ Build complete: 5 resources, 3 workers."}{"\n"}
+          {"  ✓ Built 3 worker config(s)"}{"\n"}
+          {"  Resources to provision:"}{"\n\n"}
+          {"    D1:"}{"\n"}
+          {"      - main-db"}{"\n\n"}
+          {"    KV:"}{"\n"}
+          {"      - cache"}{"\n\n"}
+          {"    R2:"}{"\n"}
+          {"      - uploads"}{"\n\n"}
+          {"    QUEUE:"}{"\n"}
+          {"      - background-tasks"}{"\n\n"}
+          {"    VECTORIZE:"}{"\n"}
+          {"      - embeddings"}{"\n\n"}
+          {"  Starting provisioning..."}{"\n"}
+          {"  Creating d1: main-db"}{"\n"}
+          {"    Created D1: main-db {\"database_id\":\"fa9ee4c0-...\"}"}{"\n"}
+          {"    Applying D1 migrations..."}{"\n"}
+          {"  Creating kv: cache"}{"\n"}
+          {"    Created KV: cache {\"id\":\"7ff98c11-...\"}"}{"\n"}
+          {"  Creating r2: uploads"}{"\n"}
+          {"    Created R2: uploads {\"bucket_name\":\"uploads\"}"}{"\n"}
+          {"  Creating queues: background-tasks"}{"\n"}
+          {"    Created queue 'background-tasks'"}{"\n"}
+          {"  Creating vectorize: embeddings"}{"\n"}
+          {"    Created Vectorize: embeddings {\"index_name\":\"embeddings\"}"}{"\n"}
+          {"  Re-generating configs with real resource IDs..."}{"\n"}
+          {"  ✓ Configs updated with real resource IDs"}{"\n"}
+          {"  Deploy order: api -> background -> web"}{"\n"}
+          {"  Starting deploy..."}{"\n"}
+          {"  Deploying api..."}{"\n"}
+          {"    ✓ Deployed api"}{"\n"}
+          {"  Deploying background..."}{"\n"}
+          {"    ✓ Deployed background"}{"\n"}
+          {"  Deploying web..."}{"\n"}
+          {"    ✓ Deployed web"}{"\n"}
+          {"  ✓ Deployment complete: 3/3 worker(s) deployed successfully"}
         </CodeBlock>
 
         <h3>Topological Ordering</h3>
@@ -335,34 +354,39 @@ export default function CLIReferencePage() {
 
         <FlagTable
           flags={[
-            { flag: "--dry-run", desc: "Preview the provisioning plan without executing", default: "false" },
             { flag: "--env", alias: "-e", desc: "Target environment", default: "production" },
-            { flag: "--force", desc: "Re-create resources even if they exist", default: "false" },
+            { flag: "--filter", alias: "-f", desc: "Provision only specific resources (comma-separated)", default: "all" },
           ]}
         />
 
-        <CodeBlock title="Example — dry run" lang="bash">
-          <span className="syn-fn">$</span>{" "}
-          <span className="syn-const">levi provision --dry-run</span>
-          {"\n\n"}
-          {"  Provisioning plan:"}{"\n"}
-          {"    [create] D1 Database: main-db"}{"\n"}
-          {"    [create] KV Namespace: cache"}{"\n"}
-          {"    [create] R2 Bucket: uploads"}{"\n"}
-          {"    [create] Queue: background-tasks"}{"\n\n"}
-          <span className="syn-cmt">{"  Dry run — no resources were created."}</span>
-        </CodeBlock>
-
-        <CodeBlock title="Example — execute" lang="bash">
+        <CodeBlock title="Example output" lang="bash">
           <span className="syn-fn">$</span>{" "}
           <span className="syn-const">levi provision</span>
           {"\n\n"}
-          {"  Provisioning 4 resources..."}{"\n"}
-          {"    D1: main-db              [created] id: a1b2c3d4-..."}{"\n"}
-          {"    KV: cache                [created] id: e5f6g7h8-..."}{"\n"}
-          {"    R2: uploads              [created]"}{"\n"}
-          {"    Queue: background-tasks  [created]"}{"\n\n"}
-          <span className="syn-str">{"  All resources provisioned. Run levi deploy to ship."}</span>
+          {"  Resources to provision:"}{"\n\n"}
+          {"    D1:"}{"\n"}
+          {"      - main-db"}{"\n\n"}
+          {"    KV:"}{"\n"}
+          {"      - cache"}{"\n\n"}
+          {"    R2:"}{"\n"}
+          {"      - uploads"}{"\n\n"}
+          {"    QUEUE:"}{"\n"}
+          {"      - background-tasks"}{"\n\n"}
+          {"    VECTORIZE:"}{"\n"}
+          {"      - embeddings"}{"\n\n"}
+          {"  Creating d1: main-db"}{"\n"}
+          {"    Created D1: main-db {\"database_id\":\"fa9ee4c0-...\"}"}{"\n"}
+          {"    Applying D1 migrations..."}{"\n"}
+          {"  Creating kv: cache"}{"\n"}
+          {"    Created KV: cache {\"id\":\"7ff98c11-...\"}"}{"\n"}
+          {"  Creating r2: uploads"}{"\n"}
+          {"    Created R2: uploads {\"bucket_name\":\"uploads\"}"}{"\n"}
+          {"  Creating queues: background-tasks"}{"\n"}
+          {"    Created queue 'background-tasks'"}{"\n"}
+          {"  Creating vectorize: embeddings"}{"\n"}
+          {"    Created Vectorize: embeddings {\"index_name\":\"embeddings\"}"}{"\n"}
+          {"  Updating worker configs with real resource IDs..."}{"\n"}
+          {"  ✓ Provisioning complete."}
         </CodeBlock>
       </CommandSection>
 
@@ -471,8 +495,10 @@ export default function CLIReferencePage() {
 
         <FlagTable
           flags={[
+            { flag: "--env", alias: "-e", desc: "Target environment (production, staging, etc.)", default: "production" },
             { flag: "--worker", alias: "-w", desc: "Compare a specific worker only", default: "all" },
-            { flag: "--json", desc: "Output diff as JSON", default: "false" },
+            { flag: "--local", desc: "Compare against local configs only (skip remote)", default: "false" },
+            { flag: "--json", desc: "Output diff as machine-readable JSON", default: "false" },
           ]}
         />
 
@@ -480,15 +506,27 @@ export default function CLIReferencePage() {
           <span className="syn-fn">$</span>{" "}
           <span className="syn-const">levi diff</span>
           {"\n\n"}
-          {"  Comparing .levi/ with last deployed state..."}{"\n\n"}
-          {"  api/wrangler.jsonc:"}{"\n"}
-          {"    + d1_databases[0].binding: ANALYTICS_DB"}{"\n"}
-          {"    + d1_databases[0].database_id: \"f9a8b7c6...\""}{"\n\n"}
-          {"  web/wrangler.jsonc:"}{"\n"}
-          {"    (no changes)"}{"\n\n"}
-          {"  background/wrangler.jsonc:"}{"\n"}
-          {"    (no changes)"}{"\n"}
+          {"  Levi Diff \u2014 3 worker(s), 7 resource(s)\n"}{"\n"}
+          {"  ~ api/wrangler.jsonc (remote diff)\n"}{"\n"}
+          {"    deployed: 4/10/2026 2:34:56 PM  id: xxxxx-xxxx\n"}{"\n"}
+          {"    (differs from deployed version)\n"}{"\n\n"}
+          {"  = web/wrangler.jsonc (unchanged)\n"}{"\n"}
+          {"    no changes\n"}{"\n\n"}
+          {"  ~ background/wrangler.jsonc (local diff)\n"}{"\n"}
+          {"    removed:\n"}{"\n"}
+          {"      - kv_namespaces: []\n"}{"\n"}
+          {"    added:\n"}{"\n"}
+          {"      + kv_namespaces:\n"}{"\n"}
+          {"        - binding: CACHE\n"}{"\n"}
+          {"        - id: xxxxx\n"}
         </CodeBlock>
+
+        <p>
+          Levi diff shows two levels of comparison: <strong>local</strong>{" "}
+          (generated config vs. what is on disk in <code className="inline-code">.levi/</code>)
+          and <strong>remote</strong> (generated config vs. what is actually deployed
+          on Cloudflare). Remote comparison requires an active Wrangler login.
+        </p>
       </CommandSection>
 
       <div className="stitch-separator my-6" />
@@ -496,26 +534,47 @@ export default function CLIReferencePage() {
       {/* ── levi dashboard ─────────────────────────────────────── */}
       <CommandSection
         name="dashboard"
-        description="Open the Levi Dashboard — a local web UI for visualizing your App Graph, inspecting bindings, and monitoring deployments. This is a Phase 3 roadmap feature."
+        description="ASCII dashboard showing your application topology, bindings, and resource overview. Run in your terminal alongside levi dev."
       >
         <CodeBlock title="Usage" lang="bash">
           <span className="syn-fn">$</span>{" "}
-          <span className="syn-const">levi dashboard</span>
+          <span className="syn-const">levi dashboard</span>{" "}
+          <span className="syn-cmt">[flags]</span>
         </CodeBlock>
 
-        <div className="denim-pocket p-5 mt-4">
-          <div className="flex items-center gap-2 mb-2">
-            <span className="red-tab-h">Phase 3</span>
-            <span className="text-sm text-denim-300 font-semibold">Roadmap</span>
-          </div>
-          <p className="text-sm text-denim-300 mb-0">
-            The dashboard is planned for Phase 3 of the Levi roadmap. It
-            will provide a visual graph editor, real-time deployment status,
-            log tailing, and resource metrics — all in a local web UI
-            accessible at{" "}
-            <code className="inline-code">http://localhost:4000</code>.
-          </p>
-        </div>
+        <FlagTable
+          flags={[
+            { flag: "--watch", alias: "-w", desc: "Watch for file changes and refresh", default: "false" },
+          ]}
+        />
+
+        <CodeBlock title="Example output" lang="bash">
+          <span className="syn-fn">$</span>{" "}
+          <span className="syn-const">levi dashboard</span>
+          {"\n\n"}
+          {"  \x1b[1m Levi Dashboard \u2014 my-saas\x1b[0m\n"}{"\n"}
+          {"  \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n"}{"\n"}
+          {"    3 workers  \u00b7  7 resources  \u00b7  9 bindings\n"}{"\n"}
+          {"  \u250c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510\n"}{"\n"}
+          {"  \u2502  WORKERS                                \u2502  BINDINGS                       \u2502\n"}{"\n"}
+          {"  \u2502  api     ./src/api/index.ts     [TW]  \u2502  api.DB \u2192 DB  main-db        \u2502\n"}{"\n"}
+          {"  \u2502  web     ./src/web/entry.tsx    2     \u2502  api.CACHE \u2192 KV  cache         \u2502\n"}{"\n"}
+          {"  \u2502  worker  ./src/worker/index.ts        \u2502  api.UPLOADS \u2192 R2  uploads        \u2502\n"}{"\n"}
+          {"  \u2502                                         \u2502  web.API \u2192 Worker  api          \u2502\n"}{"\n"}
+          {"  \u2502  INFRASTRUCTURE                           \u2502                                  \u2502\n"}{"\n"}
+          {"  \u2502  DB  main-db                            \u2502  RESOURCES                       \u2502\n"}{"\n"}
+          {"  \u2502  KV  cache                              \u2502  >> api     >> web     >> worker   \u2502\n"}{"\n"}
+          {"  \u2502  S3  uploads                            \u2502  DB cache   S3 uploads MQ queue    \u2502\n"}{"\n"}
+          {"  \u2502  MQ  background-tasks                   \u2502                                  \u2502\n"}{"\n"}
+          {"  \u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518\n"}{"\n"}
+          {"  \u25bc Ctrl+C to exit  \u00b7 levi graph for text mode  \u00b7 levi.app.ts\n"}
+        </CodeBlock>
+
+        <p>
+          The dashboard shows workers, infrastructure resources, and all bindings
+          in a terminal-native ASCII layout. Use <code className="inline-code">--watch</code> to
+          keep it open while you edit <code className="inline-code">levi.app.ts</code>.
+        </p>
       </CommandSection>
 
       <div className="stitch-separator my-8" />
