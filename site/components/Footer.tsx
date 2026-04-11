@@ -138,6 +138,14 @@ export function Footer() {
                   Flarefound
                 </a>
               </li>
+              <li>
+                <a
+                  href="/llms.txt"
+                  className="text-sm text-denim-400 hover:text-wash-400 transition-colors"
+                >
+                  llms.txt
+                </a>
+              </li>
             </ul>
           </div>
         </div>

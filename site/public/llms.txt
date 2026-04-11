@@ -6,7 +6,7 @@
 - Package: `@flarefound/levi`
 - Repository: https://github.com/plsft/levi
 - License: MIT
-- Current version: 0.1.4
+- Current version: 0.3.0
 - Requires: Node.js >= 18, wrangler >= 3.0.0 (peer dependency)
 
 ## What Levi Does
