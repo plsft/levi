@@ -17,7 +17,7 @@ npm install -D @flarefound/levi
 ## Quick Start
 
 ```bash
-npx levi init          # scaffold a project (vinext, hono, or raw)
+npx levi init          # scaffold a project (vinext, TanStack, hono, or raw)
 npx levi build         # generate wrangler.jsonc for every worker
 npx levi dev           # local dev — spawns wrangler dev per worker
 npx levi deploy        # deploy in dependency order
@@ -79,6 +79,17 @@ export default app;
 
 Run `levi build` and Levi generates a complete, valid `wrangler.jsonc` for each worker — with all bindings, routes, crons, migrations, and compatibility flags resolved.
 
+## Frontend Framework Support
+
+Levi ships with first-class support for these frontend frameworks:
+
+| Framework | Command | Description |
+|---|---|---|
+| **[vinext](https://vinext.io)** | `framework: "vinext"` | Recommended. Vite + React 19 with SSR, service bindings, `nodejs_compat` |
+| **TanStack SPA** | `framework: "tanstack"` | Vite + React + TanStack Query + TanStack Router (pure SPA, no SSR) |
+| **Hono** | `framework: "hono"` | Lightweight API framework, no frontend |
+| **Raw Worker** | no framework | Plain Worker, no frontend |
+
 ## What Levi Generates
 
 ```
@@ -86,7 +97,7 @@ Run `levi build` and Levi generates a complete, valid `wrangler.jsonc` for each 
 ├── workers/
 │   ├── api/wrangler.jsonc          ← D1, KV, R2, Queue, AI bindings
 │   ├── job-runner/wrangler.jsonc   ← D1, AI bindings + queue consumer
-│   └── web/wrangler.jsonc          ← service binding + vinext assets config
+│   └── web/wrangler.jsonc          ← service binding + assets config (vinext/tanstack)
 └── graph.json                      ← serialized dependency graph
 ```
 
