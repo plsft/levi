@@ -1,6 +1,6 @@
 {
   "name": "@flarefound/levi",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "The AppHost Framework for Cloudflare — Aspire for Cloudflare",
   "type": "module",
   "main": "./dist/index.js",
