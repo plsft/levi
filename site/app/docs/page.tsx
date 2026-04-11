@@ -111,6 +111,11 @@ const categories = [
         title: "vinext (Recommended)",
         desc: "Vite-native, SSR-ready React framework built for Cloudflare Workers.",
       },
+      {
+        href: "/docs/tanstack",
+        title: "TanStack SPA",
+        desc: "Vite + React + TanStack Query + TanStack Router. Pure client-side SPA.",
+      },
     ],
   },
   {

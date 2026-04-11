@@ -34,13 +34,17 @@ export default function WorkersPage() {
           to other resources (service bindings, queues, etc.).
         </p>
         <p className="text-denim-200 leading-relaxed mb-4">
-          Levi supports three framework modes that change how the worker is built
+          Levi supports four framework modes that change how the worker is built
           and served:
         </p>
         <ul className="list-disc list-inside text-denim-200 space-y-1 ml-2">
           <li>
             <strong className="text-wash-300">vinext</strong> — Full-stack React 19
-            + Vite SSR on Workers (default)
+            + Vite SSR on Workers (recommended)
+          </li>
+          <li>
+            <strong className="text-wash-300">tanstack</strong> — Vite + React +
+            TanStack Query + TanStack Router (pure SPA, no SSR)
           </li>
           <li>
             <strong className="text-wash-300">hono</strong> — Lightweight Hono API

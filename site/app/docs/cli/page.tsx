@@ -108,7 +108,7 @@ export default function CLIReferencePage() {
         <FlagTable
           flags={[
             { flag: "--template", alias: "-t", desc: "Starter template to use", default: "minimal" },
-            { flag: "--framework", alias: "-f", desc: "Frontend framework (vinext, none)", default: "prompt" },
+            { flag: "--framework", alias: "-f", desc: "Frontend framework (vinext, tanstack, hono, raw)", default: "prompt" },
             { flag: "--package-manager", alias: "-p", desc: "npm, pnpm, yarn, or bun", default: "auto-detect" },
             { flag: "--git", desc: "Initialize a git repository", default: "true" },
             { flag: "--install", desc: "Install dependencies after scaffold", default: "true" },
