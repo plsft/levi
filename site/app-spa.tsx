@@ -1,7 +1,30 @@
 import { Routes, Route, useLocation } from "react-router-dom";
-import { useEffect, lazy, Suspense } from "react";
+import { useEffect, lazy, Suspense, Component, ReactNode } from "react";
 import { Navbar } from "./components/Navbar";
 import { Footer } from "./components/Footer";
+
+class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean; error?: Error }> {
+  constructor(props: { children: ReactNode }) {
+    super(props);
+    this.state = { hasError: false };
+  }
+  static getDerivedStateFromError(error: Error) {
+    return { hasError: true, error };
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="flex items-center justify-center py-20">
+          <div className="text-center">
+            <h2 className="text-xl font-bold text-red-400 mb-2">Something went wrong</h2>
+            <p className="text-denim-400 text-sm">{this.state.error?.message}</p>
+          </div>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
 
 // Lazy-load all pages
 const Home = lazy(() => import("./app/page"));
@@ -49,31 +72,33 @@ export function App() {
             </div>
           }
         >
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/getting-started" element={<GettingStarted />} />
-            <Route path="/examples" element={<Examples />} />
-            <Route path="/docs" element={<DocsIndex />} />
-            <Route path="/docs/core-concepts" element={<CoreConcepts />} />
-            <Route path="/docs/workers" element={<Workers />} />
-            <Route path="/docs/d1" element={<D1 />} />
-            <Route path="/docs/kv" element={<KV />} />
-            <Route path="/docs/r2" element={<R2 />} />
-            <Route path="/docs/queues" element={<Queues />} />
-            <Route path="/docs/durable-objects" element={<DurableObjects />} />
-            <Route path="/docs/vectorize" element={<Vectorize />} />
-            <Route path="/docs/hyperdrive" element={<Hyperdrive />} />
-            <Route path="/docs/ai" element={<AI />} />
-            <Route path="/docs/domains" element={<Domains />} />
-            <Route path="/docs/service-bindings" element={<ServiceBindings />} />
-            <Route path="/docs/environments" element={<Environments />} />
-            <Route path="/docs/cli" element={<CLI />} />
-            <Route path="/docs/vinext" element={<Vinext />} />
-            <Route path="/docs/tanstack" element={<TanStack />} />
-            <Route path="/docs/containers" element={<Containers />} />
-            <Route path="/docs/pipelines" element={<Pipelines />} />
-            <Route path="/docs/best-practices" element={<BestPractices />} />
-          </Routes>
+          <ErrorBoundary>
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/getting-started" element={<GettingStarted />} />
+              <Route path="/examples" element={<Examples />} />
+              <Route path="/docs" element={<DocsIndex />} />
+              <Route path="/docs/core-concepts" element={<CoreConcepts />} />
+              <Route path="/docs/workers" element={<Workers />} />
+              <Route path="/docs/d1" element={<D1 />} />
+              <Route path="/docs/kv" element={<KV />} />
+              <Route path="/docs/r2" element={<R2 />} />
+              <Route path="/docs/queues" element={<Queues />} />
+              <Route path="/docs/durable-objects" element={<DurableObjects />} />
+              <Route path="/docs/vectorize" element={<Vectorize />} />
+              <Route path="/docs/hyperdrive" element={<Hyperdrive />} />
+              <Route path="/docs/ai" element={<AI />} />
+              <Route path="/docs/domains" element={<Domains />} />
+              <Route path="/docs/service-bindings" element={<ServiceBindings />} />
+              <Route path="/docs/environments" element={<Environments />} />
+              <Route path="/docs/cli" element={<CLI />} />
+              <Route path="/docs/vinext" element={<Vinext />} />
+              <Route path="/docs/tanstack" element={<TanStack />} />
+              <Route path="/docs/containers" element={<Containers />} />
+              <Route path="/docs/pipelines" element={<Pipelines />} />
+              <Route path="/docs/best-practices" element={<BestPractices />} />
+            </Routes>
+          </ErrorBoundary>
         </Suspense>
       </main>
       <Footer />

@@ -424,7 +424,9 @@ export default function TanStackPage() {
         <span className="syn-punc">.</span>
         <span className="syn-fn">fetch</span>
         <span className="syn-punc">(</span>
-        <span className="syn-str">`/api${path}`</span>
+        <span className="syn-str">"/api"</span>
+        <span className="syn-punc">{" + "}</span>
+        <span className="syn-type">path</span>
         <span className="syn-punc">)</span>
         <span className="syn-punc">;</span>
         {"\n"}
