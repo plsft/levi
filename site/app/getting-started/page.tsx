@@ -132,6 +132,10 @@ export default function GettingStartedPage() {
               file-based routing, and server components.
             </li>
             <li>
+              <strong>TanStack SPA</strong> — Vite + React + TanStack Query +
+              TanStack Router. Pure client-side SPA, no SSR.
+            </li>
+            <li>
               <strong>Hono</strong> — Lightweight, fast API framework. Ideal for
               pure APIs and microservices.
             </li>
@@ -674,6 +678,18 @@ export default function GettingStartedPage() {
           </h4>
           <p className="text-xs text-denim-400 !mb-0">
             React 19 + Vite on Cloudflare Workers with SSR and RSC.
+          </p>
+        </Link>
+
+        <Link
+          href="/docs/tanstack"
+          className="stitch-border rounded-lg p-4 bg-denim-900/30 hover:bg-denim-900/50 transition-colors no-underline block"
+        >
+          <h4 className="text-sm font-bold text-wash-400 mb-1">
+            TanStack SPA
+          </h4>
+          <p className="text-xs text-denim-400 !mb-0">
+            Vite + React + TanStack Query + TanStack Router. Pure SPA.
           </p>
         </Link>
 
