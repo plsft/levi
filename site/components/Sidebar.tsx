@@ -65,6 +65,9 @@ const sections = [
     title: "Examples",
     links: [
       { href: "/examples", label: "Example Apps" },
+      { href: "/examples/ai", label: "AI Applications" },
+      { href: "/examples/platform", label: "Multi-Tenant SaaS" },
+      { href: "/examples/edge", label: "Edge-Hardened App" },
       { href: "/examples/tanstack", label: "TanStack Invoice SaaS" },
     ],
   },

@@ -44,7 +44,7 @@ export default function TanstackExamplePage() {
         <pre className="bg-denim-900 border border-denim-700 rounded-lg p-4 text-denim-100 text-sm overflow-x-auto">{`import { FlareApp } from "@flarefound/levi";
 
 const app = new FlareApp("invoice-saas", {
-  compatibility_dates: "2026-04-01",
+  compatibility_date: "2026-04-01",
 });
 
 const db = app.addD1("main-db", { migrations: "./migrations" });

@@ -36,6 +36,9 @@ const Email = lazy(() => import("./app/docs/email/page"));
 const Bindings = lazy(() => import("./app/docs/bindings/page"));
 const Examples = lazy(() => import("./app/examples/page"));
 const ExamplesTanstack = lazy(() => import("./app/examples/tanstack/page"));
+const ExamplesPlatform = lazy(() => import("./app/examples/platform/page"));
+const ExamplesEdge = lazy(() => import("./app/examples/edge/page"));
+const ExamplesAI = lazy(() => import("./app/examples/ai/page"));
 const DocsIndex = lazy(() => import("./app/docs/page"));
 const CoreConcepts = lazy(() => import("./app/docs/core-concepts/page"));
 const Workers = lazy(() => import("./app/docs/workers/page"));
@@ -89,6 +92,9 @@ export function App() {
               <Route path="/docs/bindings" element={<Bindings />} />
               <Route path="/examples" element={<Examples />} />
               <Route path="/examples/tanstack" element={<ExamplesTanstack />} />
+              <Route path="/examples/platform" element={<ExamplesPlatform />} />
+              <Route path="/examples/edge" element={<ExamplesEdge />} />
+              <Route path="/examples/ai" element={<ExamplesAI />} />
               <Route path="/docs" element={<DocsIndex />} />
               <Route path="/docs/core-concepts" element={<CoreConcepts />} />
               <Route path="/docs/workers" element={<Workers />} />

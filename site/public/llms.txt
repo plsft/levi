@@ -939,6 +939,60 @@ app.addWorker("api", {
 export default app;
 ```
 
+### Pattern 11: Multi-Tenant Platform (Workers for Platforms)
+
+```typescript
+import { FlareApp } from "@flarefound/levi";
+
+const app = new FlareApp("tenantflow", {
+  compatibility_date: "2026-04-01",
+  defaultZone: "tenantflow.example",
+});
+
+const guard = app.addWorker("outbound-guard", { entrypoint: "./src/guard.ts" });
+const tenants = app.addDispatchNamespace("customers-prod", {
+  outbound: { service: guard, parameters: ["customer_id"] },
+});
+const limiter = app.addRateLimit("tenant-api", { limit: 300, period: 60 });
+const usage = app.addAnalyticsEngine("tenant-usage");
+
+app.addWorker("router", {
+  entrypoint: "./src/router.ts",
+  bindings: { DISPATCH: tenants, LIMITER: limiter, USAGE: usage },
+  routes: ["*.tenantflow.example/*"],
+});
+// Runtime: env.DISPATCH.get(tenantScript).fetch(request)
+
+export default app;
+```
+
+### Pattern 12: Metered AI API (Gateway + Analytics Engine + Rate Limiting)
+
+```typescript
+import { FlareApp } from "@flarefound/levi";
+
+const app = new FlareApp("ai-api", { compatibility_date: "2026-04-01" });
+
+const gateway = app.addAIGateway("llm-gateway", {
+  id: "ai-api-gateway",
+  caching: { enabled: true, ttl: 3600 },
+  logCollection: { enabled: true },
+});
+const usage = app.addAnalyticsEngine("llm-usage");
+const limiter = app.addRateLimit("per-key", { limit: 60, period: 60 });
+const keys = app.addKV("api-keys");
+
+app.addWorker("inference-api", {
+  framework: "hono",
+  entrypoint: "./src/index.ts",
+  bindings: { AI: gateway, USAGE: usage, LIMITER: limiter, KEYS: keys },
+});
+// Runtime: LIMITER.limit({ key }) → 429; USAGE.writeDataPoint({ blobs: [key, model],
+// doubles: [tokens], indexes: [key] }) — bill from Analytics Engine's SQL API.
+
+export default app;
+```
+
 ---
 
 ## Anti-Patterns (DO NOT DO THIS)

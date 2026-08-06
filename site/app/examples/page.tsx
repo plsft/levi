@@ -19,6 +19,52 @@ export default function ExamplesPage() {
         </p>
       </div>
 
+      {/* ── Full example deep-dives ── */}
+      <div className="mb-12">
+        <div className="grid sm:grid-cols-2 gap-4 not-prose">
+          {[
+            {
+              href: "/examples/ai",
+              tag: "AI",
+              title: "AI Applications",
+              desc: "RAG chatbot, browser-powered research agent, and a metered AI API — Workers AI, Vectorize, AI Gateway, Browser Rendering, and Analytics Engine.",
+            },
+            {
+              href: "/examples/platform",
+              tag: "0.4.0",
+              title: "Multi-Tenant SaaS Platform",
+              desc: "Workers for Platforms: dispatch namespaces, outbound guards, per-tenant rate limiting, Secrets Store, and ops email alerts.",
+            },
+            {
+              href: "/examples/edge",
+              tag: "0.4.0",
+              title: "Edge-Hardened Production App",
+              desc: "WAF, cache rules, redirects, HTTP rate limiting, and security headers declared next to the app — plus tail workers and analytics.",
+            },
+            {
+              href: "/examples/tanstack",
+              tag: "Full-stack",
+              title: "Invoice SaaS — TanStack SPA",
+              desc: "Complete invoice manager: TanStack SPA frontend, Hono API, D1, and custom domains.",
+            },
+          ].map((card) => (
+            <Link
+              key={card.href}
+              href={card.href}
+              className="group block stitch-border rounded-lg p-5 bg-denim-900/50 hover:bg-denim-800/60 transition-all hover:border-wash-400"
+            >
+              <div className="flex items-center gap-2 mb-2">
+                <h3 className="text-base font-semibold text-denim-100 group-hover:text-wash-300 transition-colors m-0">
+                  {card.title}
+                </h3>
+                <span className="red-tab-h">{card.tag}</span>
+              </div>
+              <p className="text-sm text-denim-300 leading-relaxed m-0">{card.desc}</p>
+            </Link>
+          ))}
+        </div>
+      </div>
+
       <div className="stitch-separator mb-12" />
 
       {/* ── Example 1: Minimal Worker ── */}
