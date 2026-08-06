@@ -1,3 +1,4 @@
+import { Code } from "../../../components/Code";
 import Link from "next/link";
 
 export default function ReactExamplePage() {
@@ -21,7 +22,7 @@ export default function ReactExamplePage() {
 
       <section className="mb-12">
         <h2 style={{ marginTop: 0, borderBottom: "none", paddingBottom: 0 }}>Project Structure</h2>
-        <pre className="bg-denim-900 border border-denim-700 rounded-lg p-4 text-denim-100 text-sm overflow-x-auto">{`guestbook/
+        <Code>{`guestbook/
 ├── src/
 │   ├── api/
 │   │   └── index.ts        # Hono API worker (D1)
@@ -33,14 +34,14 @@ export default function ReactExamplePage() {
 │   └── 001_entries.sql
 ├── index.html
 ├── vite.config.ts
-└── levi.app.ts`}</pre>
+└── levi.app.ts`}</Code>
       </section>
 
       <div className="stitch-separator mb-12" />
 
       <section className="mb-12">
         <h2 style={{ marginTop: 0, borderBottom: "none", paddingBottom: 0 }}>levi.app.ts</h2>
-        <pre className="bg-denim-900 border border-denim-700 rounded-lg p-4 text-denim-100 text-sm overflow-x-auto">{`import { FlareApp } from "@flarefound/levi";
+        <Code>{`import { FlareApp } from "@flarefound/levi";
 
 const app = new FlareApp("guestbook", {
   compatibility_date: "2026-04-01",
@@ -72,7 +73,7 @@ const web = app.addWorker("web", {
 
 app.addDomain("guestbook.example.com", { ssl: "full_strict" });
 
-export default app;`}</pre>
+export default app;`}</Code>
       </section>
 
       <div className="stitch-separator mb-12" />
@@ -88,7 +89,7 @@ export default app;`}</pre>
           <code>not_found_handling: &quot;single-page-application&quot;</code> setting makes unknown
           paths fall back to index.html, so client-side routing just works.
         </p>
-        <pre className="bg-denim-900 border border-denim-700 rounded-lg p-4 text-denim-100 text-sm overflow-x-auto">{`export default {
+        <Code>{`export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
 
@@ -100,7 +101,7 @@ export default app;`}</pre>
     // Static assets; SPA fallback comes from not_found_handling.
     return env.ASSETS.fetch(request);
   },
-};`}</pre>
+};`}</Code>
       </section>
 
       <div className="stitch-separator mb-12" />
@@ -109,7 +110,7 @@ export default app;`}</pre>
         <h2 style={{ marginTop: 0, borderBottom: "none", paddingBottom: 0 }}>
           Bootstrap — src/web/main.tsx
         </h2>
-        <pre className="bg-denim-900 border border-denim-700 rounded-lg p-4 text-denim-100 text-sm overflow-x-auto">{`import { createRoot } from "react-dom/client";
+        <Code>{`import { createRoot } from "react-dom/client";
 import { StrictMode } from "react";
 import { App } from "./App";
 
@@ -117,7 +118,7 @@ createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <App />
   </StrictMode>,
-);`}</pre>
+);`}</Code>
       </section>
 
       <div className="stitch-separator mb-12" />
@@ -132,7 +133,7 @@ createRoot(document.getElementById("root")!).render(
           /api/entries, and <code>useOptimistic</code> to show the new entry instantly before the
           server confirms.
         </p>
-        <pre className="bg-denim-900 border border-denim-700 rounded-lg p-4 text-denim-100 text-sm overflow-x-auto">{`import { use, useOptimistic, useActionState, Suspense } from "react";
+        <Code>{`import { use, useOptimistic, useActionState, Suspense } from "react";
 
 type Entry = { name: string; message: string; pending?: boolean };
 
@@ -197,7 +198,7 @@ export function App() {
       <Entries entriesPromise={fetchEntries()} />
     </Suspense>
   );
-}`}</pre>
+}`}</Code>
       </section>
 
       <div className="stitch-separator mb-12" />
@@ -206,7 +207,7 @@ export function App() {
         <h2 style={{ marginTop: 0, borderBottom: "none", paddingBottom: 0 }}>
           Hono API — src/api/index.ts
         </h2>
-        <pre className="bg-denim-900 border border-denim-700 rounded-lg p-4 text-denim-100 text-sm overflow-x-auto">{`import { Hono } from "hono";
+        <Code>{`import { Hono } from "hono";
 
 const app = new Hono<{ Bindings: { DB: D1Database } }>();
 
@@ -225,7 +226,7 @@ app.post("/api/entries", async (c) => {
   return c.json({ ok: true }, 201);
 });
 
-export default app;`}</pre>
+export default app;`}</Code>
       </section>
 
       <div className="stitch-separator mb-12" />

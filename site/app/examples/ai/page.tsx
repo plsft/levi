@@ -1,3 +1,4 @@
+import { Code } from "../../../components/Code";
 import Link from "next/link";
 
 export default function AIExamplesPage() {
@@ -25,7 +26,7 @@ export default function AIExamplesPage() {
           Vectorize index, questions are answered by a Workers AI model routed through an AI Gateway (which
           caches repeated prompts), and conversation history lands in D1. Four resources, one worker, one file.
         </p>
-        <pre className="bg-denim-900 border border-denim-700 rounded-lg p-4 text-denim-100 text-sm overflow-x-auto">{`import { FlareApp } from "@flarefound/levi";
+        <Code>{`import { FlareApp } from "@flarefound/levi";
 
 const app = new FlareApp("docs-chat", {
   compatibility_date: "2026-04-01",
@@ -48,8 +49,8 @@ const chat = app.addWorker("chat", {
   bindings: { AI: gateway, VECTORS: embeddings, HISTORY: history },
 });
 
-export default app;`}</pre>
-        <pre className="bg-denim-900 border border-denim-700 rounded-lg p-4 text-denim-100 text-sm overflow-x-auto">{`// src/chat.ts — the /ask handler
+export default app;`}</Code>
+        <Code>{`// src/chat.ts — the /ask handler
 app.post("/ask", async (c) => {
   const { question, sessionId } = await c.req.json();
 
@@ -81,7 +82,7 @@ app.post("/ask", async (c) => {
   ).bind(sessionId, question, answer.response).run();
 
   return c.json({ answer: answer.response });
-});`}</pre>
+});`}</Code>
         <p className="text-denim-300 text-sm leading-relaxed max-w-3xl">
           Why it works: embeddings, vector search, and generation all run inside Cloudflare&apos;s network, so
           there are no round trips to external vector databases or LLM providers — and the AI Gateway cache
@@ -98,7 +99,7 @@ app.post("/ask", async (c) => {
           a consumer worker picks them up in batches, drives a real headless browser via Browser Rendering
           (new in 0.4.0), screenshots each page into R2, and summarizes the extracted text with Workers AI.
         </p>
-        <pre className="bg-denim-900 border border-denim-700 rounded-lg p-4 text-denim-100 text-sm overflow-x-auto">{`import { FlareApp } from "@flarefound/levi";
+        <Code>{`import { FlareApp } from "@flarefound/levi";
 
 const app = new FlareApp("research-agent", {
   compatibility_date: "2026-04-01",
@@ -121,8 +122,8 @@ const crawler = app.addWorker("crawler", {
   consumers: [{ queue: jobs, maxBatchSize: 5 }],
 });
 
-export default app;`}</pre>
-        <pre className="bg-denim-900 border border-denim-700 rounded-lg p-4 text-denim-100 text-sm overflow-x-auto">{`// src/crawler.ts — queue consumer
+export default app;`}</Code>
+        <Code>{`// src/crawler.ts — queue consumer
 import puppeteer from "@cloudflare/puppeteer";
 
 export default {
@@ -153,7 +154,7 @@ export default {
     }
     await browser.close();
   },
-};`}</pre>
+};`}</Code>
         <p className="text-denim-300 text-sm leading-relaxed max-w-3xl">
           Why it works: the queue decouples user requests from slow browser sessions, and because Browser
           Rendering runs headless Chrome inside Cloudflare, there is no fleet of browser VMs to manage —
@@ -171,7 +172,7 @@ export default {
           through an AI Gateway with logging enabled, and every request writes a data point to Analytics
           Engine (new in 0.4.0) that your billing pipeline reads back over the SQL API.
         </p>
-        <pre className="bg-denim-900 border border-denim-700 rounded-lg p-4 text-denim-100 text-sm overflow-x-auto">{`import { FlareApp } from "@flarefound/levi";
+        <Code>{`import { FlareApp } from "@flarefound/levi";
 
 const app = new FlareApp("inference-api", {
   compatibility_date: "2026-04-01",
@@ -192,8 +193,8 @@ const api = app.addWorker("inference-api", {
   bindings: { AI: gateway, USAGE: usage, LIMITER: limiter, KEYS: keys },
 });
 
-export default app;`}</pre>
-        <pre className="bg-denim-900 border border-denim-700 rounded-lg p-4 text-denim-100 text-sm overflow-x-auto">{`// src/api.ts — metered inference endpoint
+export default app;`}</Code>
+        <Code>{`// src/api.ts — metered inference endpoint
 app.post("/v1/generate", async (c) => {
   const apiKey = c.req.header("Authorization")?.replace("Bearer ", "");
   const account = apiKey && (await c.env.KEYS.get(apiKey, "json"));
@@ -217,7 +218,7 @@ app.post("/v1/generate", async (c) => {
   });
 
   return c.json({ output: result.response, tokens: tokensUsed });
-});`}</pre>
+});`}</Code>
         <p className="text-denim-300 text-sm leading-relaxed max-w-3xl">
           Why it works: rate limiting and metering happen in-process with the request — no Redis for
           counters, no metrics pipeline to operate. Analytics Engine absorbs millions of writes and your

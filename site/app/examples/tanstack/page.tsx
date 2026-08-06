@@ -1,3 +1,4 @@
+import { Code } from "../../../components/Code";
 import Link from "next/link";
 import { DashboardCode, CustomersCode, InvoicesCode } from "./code";
 
@@ -19,7 +20,7 @@ export default function TanstackExamplePage() {
 
       <section className="mb-12">
         <h2 style={{ marginTop: 0, borderBottom: "none", paddingBottom: 0 }}>Project Structure</h2>
-        <pre className="bg-denim-900 border border-denim-700 rounded-lg p-4 text-denim-100 text-sm overflow-x-auto">{`invoice-saas/
+        <Code>{`invoice-saas/
 ├── src/
 │   ├── api/
 │   │   └── index.ts          # Hono API worker
@@ -34,14 +35,14 @@ export default function TanstackExamplePage() {
 │   │           └── invoices.tsx   # Invoice list with view modal
 ├── migrations/
 │   └── 001_init.sql          # D1 schema
-└── levi.app.ts               # FlareApp definition`}</pre>
+└── levi.app.ts               # FlareApp definition`}</Code>
       </section>
 
       <div className="stitch-separator mb-12" />
 
       <section className="mb-12">
         <h2 style={{ marginTop: 0, borderBottom: "none", paddingBottom: 0 }}>levi.app.ts</h2>
-        <pre className="bg-denim-900 border border-denim-700 rounded-lg p-4 text-denim-100 text-sm overflow-x-auto">{`import { FlareApp } from "@flarefound/levi";
+        <Code>{`import { FlareApp } from "@flarefound/levi";
 
 const app = new FlareApp("invoice-saas", {
   compatibility_date: "2026-04-01",
@@ -65,7 +66,7 @@ const web = app.addWorker("web", {
 
 app.addDomain("invoice.example.com", { ssl: "full_strict" });
 
-export default app;`}</pre>
+export default app;`}</Code>
       </section>
 
       <div className="stitch-separator mb-12" />

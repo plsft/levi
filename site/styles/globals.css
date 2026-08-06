@@ -308,6 +308,7 @@ html { scroll-behavior: smooth; }
 .syn-fn { color: #7dcfff; }
 .syn-num { color: #ff9e64; }
 .syn-const { color: #c0caf5; }
+.syn-var { color: #c0caf5; }
 .syn-prop { color: #73daca; }
 .syn-punc { color: #89a4bb; }
 .syn-op { color: #89ddff; }

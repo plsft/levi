@@ -1,3 +1,4 @@
+import { Code } from "../../../components/Code";
 import Link from "next/link";
 
 export default function EdgeExamplePage() {
@@ -25,7 +26,7 @@ export default function EdgeExamplePage() {
           The compute layer first: a Hono API worker backed by D1 and KV, an Analytics Engine
           dataset for metrics, and a tail worker that receives the API worker&apos;s logs.
         </p>
-        <pre className="bg-denim-900 border border-denim-700 rounded-lg p-4 text-denim-100 text-sm overflow-x-auto">{`import { FlareApp } from "@flarefound/levi";
+        <Code>{`import { FlareApp } from "@flarefound/levi";
 
 const app = new FlareApp("acme-shop", {
   compatibility_date: "2026-04-01",
@@ -50,7 +51,7 @@ const api = app.addWorker("api", {
   tailConsumers: [sink],
 });
 
-app.addDomain("acme-shop.example", { ssl: "full_strict" });`}</pre>
+app.addDomain("acme-shop.example", { ssl: "full_strict" });`}</Code>
       </section>
 
       <div className="stitch-separator mb-12" />
@@ -62,7 +63,7 @@ app.addDomain("acme-shop.example", { ssl: "full_strict" });`}</pre>
           rate limiting, response headers — is part of the same app definition. Same file, same
           diff, same deploy.
         </p>
-        <pre className="bg-denim-900 border border-denim-700 rounded-lg p-4 text-denim-100 text-sm overflow-x-auto">{`// ── The edge, declared ───────────────────────────────────
+        <Code>{`// ── The edge, declared ───────────────────────────────────
 // Legacy domain → new domain, path preserved
 app.addRedirect("www-to-apex", {
   from: "https://www.acme-shop.example/*",
@@ -107,7 +108,7 @@ app.addHeaderRule("security-headers", {
   },
 });
 
-export default app;`}</pre>
+export default app;`}</Code>
       </section>
 
       <div className="stitch-separator mb-12" />
@@ -118,19 +119,19 @@ export default app;`}</pre>
           Each worker gets its own generated wrangler config, and every zone with edge rules gets
           a rules manifest describing exactly what Levi will manage.
         </p>
-        <pre className="bg-denim-900 border border-denim-700 rounded-lg p-4 text-denim-100 text-sm overflow-x-auto">{`.levi/
+        <Code>{`.levi/
 ├── workers/
 │   ├── api/
 │   │   └── wrangler.jsonc
 │   └── log-sink/
 │       └── wrangler.jsonc
 └── zones/
-    └── acme-shop.example.rules.json`}</pre>
+    └── acme-shop.example.rules.json`}</Code>
         <p className="text-denim-200 leading-relaxed max-w-3xl">
           An excerpt from the zone manifest — note the description prefix, which is how Levi
           recognizes its own rules on subsequent runs:
         </p>
-        <pre className="bg-denim-900 border border-denim-700 rounded-lg p-4 text-denim-100 text-sm overflow-x-auto">{`{
+        <Code>{`{
   "zone": "acme-shop.example",
   "rulesets": {
     "http_request_dynamic_redirect": [
@@ -150,7 +151,7 @@ export default app;`}</pre>
       }
     ]
   }
-}`}</pre>
+}`}</Code>
       </section>
 
       <div className="stitch-separator mb-12" />
@@ -161,7 +162,7 @@ export default app;`}</pre>
           <code>levi diff</code> compares the declared edge against what&apos;s live in the zone
           and shows exactly what would change before anything is applied.
         </p>
-        <pre className="bg-denim-900 border border-denim-700 rounded-lg p-4 text-denim-100 text-sm overflow-x-auto">{`$ levi diff
+        <Code>{`$ levi diff
 
 Zone: acme-shop.example
   Redirects
@@ -180,7 +181,7 @@ Zone: acme-shop.example
 3 to create, 2 unchanged, 0 to delete.
 
 $ levi provision
-✔ Zone acme-shop.example: 3 rules created, 2 unchanged`}</pre>
+✔ Zone acme-shop.example: 3 rules created, 2 unchanged`}</Code>
         <p className="text-denim-200 leading-relaxed max-w-3xl">
           The safety model is simple: Levi only ever creates, updates, or deletes rules whose
           description starts with &quot;Managed by Levi:&quot;. Anything created by hand in the
@@ -200,7 +201,7 @@ $ levi provision
           <code>env.METRICS.writeDataPoint(...)</code> — no HTTP hop, no batching code. The sink
           itself is about ten lines:
         </p>
-        <pre className="bg-denim-900 border border-denim-700 rounded-lg p-4 text-denim-100 text-sm overflow-x-auto">{`// src/sink.ts
+        <Code>{`// src/sink.ts
 export default {
   async tail(events) {
     for (const event of events) {
@@ -213,7 +214,7 @@ export default {
       }
     }
   },
-};`}</pre>
+};`}</Code>
       </section>
 
       <div className="stitch-separator mb-12" />

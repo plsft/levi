@@ -1,3 +1,4 @@
+import { Code } from "../../../components/Code";
 import Link from "next/link";
 
 export default function PlatformExamplePage() {
@@ -20,19 +21,19 @@ export default function PlatformExamplePage() {
 
       <section className="mb-12">
         <h2 style={{ marginTop: 0, borderBottom: "none", paddingBottom: 0 }}>Project Structure</h2>
-        <pre className="bg-denim-900 border border-denim-700 rounded-lg p-4 text-denim-100 text-sm overflow-x-auto">{`tenantflow/
+        <Code>{`tenantflow/
 ├── src/
 │   ├── router.ts         # Dispatch worker — resolves tenant, rate limits, dispatches
 │   ├── guard.ts          # Outbound worker — filters all tenant egress
 │   └── admin.ts          # Admin API — tenant CRUD, script uploads
-└── levi.app.ts           # FlareApp definition`}</pre>
+└── levi.app.ts           # FlareApp definition`}</Code>
       </section>
 
       <div className="stitch-separator mb-12" />
 
       <section className="mb-12">
         <h2 style={{ marginTop: 0, borderBottom: "none", paddingBottom: 0 }}>levi.app.ts</h2>
-        <pre className="bg-denim-900 border border-denim-700 rounded-lg p-4 text-denim-100 text-sm overflow-x-auto">{`import { FlareApp } from "@flarefound/levi";
+        <Code>{`import { FlareApp } from "@flarefound/levi";
 
 const app = new FlareApp("tenantflow", {
   compatibility_date: "2026-04-01",
@@ -78,7 +79,7 @@ const router = app.addWorker("router", {
 
 app.addDomain("tenantflow.example", { ssl: "full_strict" });
 
-export default app;`}</pre>
+export default app;`}</Code>
       </section>
 
       <div className="stitch-separator mb-12" />
@@ -89,7 +90,7 @@ export default app;`}</pre>
           The router is the front door for every tenant request. It resolves the tenant from the
           subdomain, applies the shared rate limit, then dispatches into the namespace.
         </p>
-        <pre className="bg-denim-900 border border-denim-700 rounded-lg p-4 text-denim-100 text-sm overflow-x-auto">{`export default {
+        <Code>{`export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const host = new URL(request.url).hostname;
     const tenant = host.split(".")[0]; // acme.tenantflow.example → "acme"
@@ -122,7 +123,7 @@ export default app;`}</pre>
       throw err;
     }
   },
-};`}</pre>
+};`}</Code>
       </section>
 
       <div className="stitch-separator mb-12" />
@@ -134,7 +135,7 @@ export default app;`}</pre>
           <code> customer_id</code> parameter declared on the namespace arrives in the environment,
           so you can audit and filter egress per tenant.
         </p>
-        <pre className="bg-denim-900 border border-denim-700 rounded-lg p-4 text-denim-100 text-sm overflow-x-auto">{`const BLOCKED = ["localhost", "127.0.0.1", "169.254.169.254", "internal.tenantflow.example"];
+        <Code>{`const BLOCKED = ["localhost", "127.0.0.1", "169.254.169.254", "internal.tenantflow.example"];
 
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
@@ -148,17 +149,17 @@ export default {
 
     return fetch(request);
   },
-};`}</pre>
+};`}</Code>
       </section>
 
       <div className="stitch-separator mb-12" />
 
       <section className="mb-12">
         <h2 style={{ marginTop: 0, borderBottom: "none", paddingBottom: 0 }}>Provision &amp; Deploy</h2>
-        <pre className="bg-denim-900 border border-denim-700 rounded-lg p-4 text-denim-100 text-sm overflow-x-auto">{`levi build       # compile workers, validate the app graph
+        <Code>{`levi build       # compile workers, validate the app graph
 levi provision   # creates the dispatch namespace (wrangler dispatch-namespace create),
                  # the Secrets Store secret, and registers the ops-alerts email destination
-levi deploy      # deploys the router, guard, and admin workers`}</pre>
+levi deploy      # deploys the router, guard, and admin workers`}</Code>
         <p className="text-denim-200 leading-relaxed max-w-3xl">
           Tenant scripts themselves are uploaded into the namespace via the Cloudflare API at
           runtime — your admin API calls it whenever a customer deploys. See the{" "}
