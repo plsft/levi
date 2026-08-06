@@ -40,6 +40,7 @@ const sections = [
     links: [
       { href: "/docs/domains", label: "Domains & SSL" },
       { href: "/docs/environments", label: "Environments" },
+      { href: "/docs/secrets", label: "Secrets & Config" },
     ],
   },
   {

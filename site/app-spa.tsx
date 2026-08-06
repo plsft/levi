@@ -34,6 +34,7 @@ const EdgeRules = lazy(() => import("./app/docs/edge-rules/page"));
 const Platforms = lazy(() => import("./app/docs/platforms/page"));
 const Email = lazy(() => import("./app/docs/email/page"));
 const Bindings = lazy(() => import("./app/docs/bindings/page"));
+const Secrets = lazy(() => import("./app/docs/secrets/page"));
 const Examples = lazy(() => import("./app/examples/page"));
 const ExamplesTanstack = lazy(() => import("./app/examples/tanstack/page"));
 const ExamplesPlatform = lazy(() => import("./app/examples/platform/page"));
@@ -91,6 +92,7 @@ export function App() {
               <Route path="/docs/platforms" element={<Platforms />} />
               <Route path="/docs/email" element={<Email />} />
               <Route path="/docs/bindings" element={<Bindings />} />
+              <Route path="/docs/secrets" element={<Secrets />} />
               <Route path="/examples" element={<Examples />} />
               <Route path="/examples/tanstack" element={<ExamplesTanstack />} />
               <Route path="/examples/platform" element={<ExamplesPlatform />} />

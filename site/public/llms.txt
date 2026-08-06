@@ -1368,6 +1368,11 @@ import {
   DurableObjectResource, VectorizeResource, HyperdriveResource,
   WorkersAIResource, AIGatewayResource, DomainResource,
   WorkflowResource, ContainerResource, PipelineResource,
+  TailWorkerResource, MTLSResource, SecretResource,
+  // 0.4.0
+  AnalyticsEngineResource, BrowserRenderingResource, RateLimitResource,
+  SecretsStoreSecretResource, DispatchNamespaceResource, EmailResource,
+  EdgeRuleResource, SnippetResource,
 } from "@flarefound/levi";
 
 // Types only
@@ -1379,6 +1384,12 @@ import type {
   WorkflowOptions, ContainerOptions, PipelineOptions,
   CronConfig, ConsumerConfig, BindingMap, EnvironmentConfig,
   ResourceType, Framework, BuildResult,
+  // 0.4.0
+  AnalyticsEngineOptions, BrowserRenderingOptions, RateLimitOptions,
+  SecretsStoreSecretOptions, DispatchNamespaceOptions, EmailOptions,
+  RedirectRuleOptions, CacheRuleOptions, WAFRuleOptions,
+  RateLimitRuleOptions, HeaderRuleOptions, SnippetOptions,
+  ZoneRulesManifest, RulesetPhase, EdgeRuleKind, MatchSugar,
 } from "@flarefound/levi";
 
 // Types subpath

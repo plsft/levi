@@ -202,19 +202,27 @@ export default function CLIReferencePage() {
           {"  Building Levi app...\n"}{"\n"}
           {"  \u2713 Generated api/wrangler.jsonc\n"}{"\n"}
           {"  \u2713 Generated web/wrangler.jsonc\n"}{"\n"}
+          {"  \u2713 Generated log-sink/wrangler.jsonc\n"}{"\n"}
           {"  \u2713 Generated graph.json\n"}{"\n"}
-          {"  Build complete: 2 worker(s), 5 total resource(s)\n"}
+          {"  \u2713 Generated zones/acme.com.rules.json\n"}{"\n"}
+          {"  Build complete: 2 worker(s), 9 total resource(s), 1 zone manifest(s)\n"}
         </CodeBlock>
 
         <h3>Output Structure</h3>
         <p>
           The <code className="inline-code">.levi/</code> directory contains
-          one subdirectory per worker, each with a{" "}
+          one subdirectory per worker \u2014 including tail workers, which get
+          their own configs \u2014 each with a{" "}
           <code className="inline-code">wrangler.jsonc</code>. With{" "}
           <code className="inline-code">--env staging</code>, output goes to{" "}
           <code className="inline-code">.levi/staging/</code>. The directory also
           contains <code className="inline-code">graph.json</code> (the
-          serialized DAG).
+          serialized DAG) and, when the app declares{" "}
+          <Link href="/docs/edge-rules" className="text-wash-400 hover:text-wash-300">
+            edge rules or snippets
+          </Link>
+          , one <code className="inline-code">zones/&lt;zone&gt;.rules.json</code>{" "}
+          desired-state manifest per zone.
         </p>
       </CommandSection>
 
@@ -351,7 +359,7 @@ export default function CLIReferencePage() {
       {/* ── levi provision ─────────────────────────────────────── */}
       <CommandSection
         name="provision"
-        description="Create or update Cloudflare resources (D1, KV, R2, Queues, etc.) without deploying workers. Useful for setting up infrastructure before the first deploy."
+        description="Create or update Cloudflare resources without deploying workers: D1, KV, R2, Queues, Vectorize, dispatch namespaces, and the Secrets Store via wrangler; DNS, Email Routing, and edge rules/snippets via the Cloudflare API."
       >
         <CodeBlock title="Usage" lang="bash">
           <span className="syn-fn">$</span>{" "}
@@ -381,6 +389,13 @@ export default function CLIReferencePage() {
           {"      - background-tasks"}{"\n\n"}
           {"    VECTORIZE:"}{"\n"}
           {"      - embeddings"}{"\n\n"}
+          {"    DISPATCH-NAMESPACE:"}{"\n"}
+          {"      - customers-prod"}{"\n\n"}
+          {"    SECRETS STORE:"}{"\n"}
+          {"      - stripe-api-key (store: default)"}{"\n\n"}
+          {"    EDGE RULES & SNIPPETS (via Cloudflare API):"}{"\n"}
+          {"      - redirect: www-to-apex"}{"\n"}
+          {"      - waf: challenge-bots"}{"\n\n"}
           {"  Creating d1: main-db"}{"\n"}
           {"    Created D1: main-db {\"database_id\":\"fa9ee4c0-...\"}"}{"\n"}
           {"    Applying D1 migrations..."}{"\n"}
@@ -392,9 +407,26 @@ export default function CLIReferencePage() {
           {"    Created queue 'background-tasks'"}{"\n"}
           {"  Creating vectorize: embeddings"}{"\n"}
           {"    Created Vectorize: embeddings {\"index_name\":\"embeddings\"}"}{"\n"}
+          {"  Creating dispatch-namespace: customers-prod"}{"\n"}
+          {"  ✓ Secrets Store \"default\" ready (2e2a8231...)"}{"\n"}
+          {"  Syncing edge rules via Cloudflare API..."}{"\n"}
+          {"  ✓ acme.com http_request_dynamic_redirect: +1 ~0 -0 =0"}{"\n"}
+          {"  ✓ acme.com http_request_firewall_custom: +1 ~0 -0 =0 (2 unmanaged rule(s) untouched)"}{"\n"}
           {"  Updating worker configs with real resource IDs..."}{"\n"}
           {"  ✓ Provisioning complete."}
         </CodeBlock>
+
+        <h3>API-Provisioned Resources</h3>
+        <p>
+          Domains, Email Routing, edge rules, and snippets are provisioned
+          through the Cloudflare API and require{" "}
+          <code className="inline-code">CLOUDFLARE_API_TOKEN</code>. When the
+          token is missing, those steps downgrade to warnings — wrangler-based
+          provisioning still runs. Edge rule syncs only ever touch rules
+          tagged <code className="inline-code">Managed by Levi:</code>; use{" "}
+          <code className="inline-code">--dry-run</code> to list everything
+          without creating anything.
+        </p>
       </CommandSection>
 
       <div className="stitch-separator my-6" />
@@ -492,7 +524,7 @@ export default function CLIReferencePage() {
       {/* ── levi diff ──────────────────────────────────────────── */}
       <CommandSection
         name="diff"
-        description="Compare the current generated configs in .levi/ against the previously deployed versions. Useful for reviewing changes before deploying."
+        description="Compare generated worker configs against deployed versions, and declared edge rules against the live zone state. Read-only — the dry run for both deploy and provision."
       >
         <CodeBlock title="Usage" lang="bash">
           <span className="syn-fn">$</span>{" "}
@@ -525,14 +557,30 @@ export default function CLIReferencePage() {
           {"    added:\n"}{"\n"}
           {"      + kv_namespaces:\n"}{"\n"}
           {"        - binding: CACHE\n"}{"\n"}
-          {"        - id: xxxxx\n"}
+          {"        - id: xxxxx\n"}{"\n\n"}
+          {"  Zone: acme.com (edge rules)\n"}{"\n"}
+          {"    http_request_dynamic_redirect:\n"}{"\n"}
+          {"      + www-to-apex\n"}{"\n"}
+          {"    http_request_firewall_custom: (2 unmanaged untouched)\n"}{"\n"}
+          {"      = challenge-bots\n"}
         </CodeBlock>
 
         <p>
-          Levi diff shows two levels of comparison: <strong>local</strong>{" "}
-          (generated config vs. what is on disk in <code className="inline-code">.levi/</code>)
-          and <strong>remote</strong> (generated config vs. what is actually deployed
-          on Cloudflare). Remote comparison requires an active Wrangler login.
+          Levi diff shows three levels of comparison: <strong>local</strong>{" "}
+          (generated config vs. what is on disk in <code className="inline-code">.levi/</code>),{" "}
+          <strong>remote</strong> (generated config vs. what is actually deployed
+          on Cloudflare), and <strong>zone</strong> (declared{" "}
+          <Link href="/docs/edge-rules" className="text-wash-400 hover:text-wash-300">
+            edge rules &amp; snippets
+          </Link>{" "}
+          vs. the live zone, using the exact same plan{" "}
+          <code className="inline-code">levi provision</code> would apply).
+          Remote comparison requires an active Wrangler login; the zone section
+          requires <code className="inline-code">CLOUDFLARE_API_TOKEN</code> and
+          is skipped with <code className="inline-code">--local</code>.{" "}
+          <code className="inline-code">--json</code> includes a{" "}
+          <code className="inline-code">zones</code> array alongside the worker
+          diffs.
         </p>
       </CommandSection>
 

@@ -105,6 +105,11 @@ const categories = [
         title: "Environments",
         desc: "Staging, production, and preview environments with config isolation.",
       },
+      {
+        href: "/docs/secrets",
+        title: "Secrets & Config",
+        desc: "Vars, worker secrets, and the account-level Secrets Store — values never touch your configs.",
+      },
     ],
   },
   {

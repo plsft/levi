@@ -1,5 +1,7 @@
 import { DocLayout } from "../../../components/DocLayout";
 import { CodeBlock } from "../../../components/CodeBlock";
+import { Code } from "../../../components/Code";
+import Link from "next/link";
 
 export const metadata = {
   title: "Workers — Levi Docs",
@@ -802,6 +804,34 @@ export default function WorkersPage() {
           <span className="syn-punc">)</span>
           <span className="syn-punc">;</span>
         </CodeBlock>
+
+        <h3 className="text-lg font-medium text-wash-300 mt-6 mb-2">
+          Tail consumers &amp; observability shorthands
+        </h3>
+        <p className="text-denim-200 leading-relaxed mb-4">
+          Workers can stream structured logs to{" "}
+          <Link href="/docs/bindings" className="text-wash-400 hover:text-wash-300">
+            tail workers
+          </Link>{" "}
+          via <code className="inline-code">tailConsumers</code> (a service
+          name or the resource returned by{" "}
+          <code className="inline-code">app.addTailWorker()</code> — passing
+          the resource adds a dependency edge so it deploys first). Two more
+          shorthands: <code className="inline-code">browser: true</code>{" "}
+          enables the Browser Rendering binding as{" "}
+          <code className="inline-code">env.BROWSER</code>, and{" "}
+          <code className="inline-code">analyticsEngineDatasets</code> maps
+          binding names to Analytics Engine datasets without declaring a
+          resource.
+        </p>
+        <Code>{`const sink = app.addTailWorker("log-sink", { entrypoint: "./src/sink.ts" });
+
+app.addWorker("api", {
+  entrypoint: "./src/api.ts",
+  tailConsumers: [sink],                        // → "tail_consumers"
+  browser: true,                                // → env.BROWSER
+  analyticsEngineDatasets: { EVENTS: "events" } // → env.EVENTS.writeDataPoint()
+});`}</Code>
       </section>
 
       {/* ── Escape Hatch ───────────────────────────── */}
@@ -950,6 +980,24 @@ export default function WorkersPage() {
                 <td className="py-2 pr-4"><code className="inline-code">boolean</code></td>
                 <td className="py-2 pr-4"><code className="inline-code">false</code></td>
                 <td className="py-2">Enable Workers Logpush integration</td>
+              </tr>
+              <tr className="border-b border-denim-800">
+                <td className="py-2 pr-4"><code className="inline-code">tailConsumers</code></td>
+                <td className="py-2 pr-4"><code className="inline-code">(string | TailWorkerResource)[]</code></td>
+                <td className="py-2 pr-4"><code className="inline-code">[]</code></td>
+                <td className="py-2">Tail workers receiving this worker&apos;s logs</td>
+              </tr>
+              <tr className="border-b border-denim-800">
+                <td className="py-2 pr-4"><code className="inline-code">browser</code></td>
+                <td className="py-2 pr-4"><code className="inline-code">boolean</code></td>
+                <td className="py-2 pr-4"><code className="inline-code">false</code></td>
+                <td className="py-2">Browser Rendering binding shorthand (env.BROWSER)</td>
+              </tr>
+              <tr className="border-b border-denim-800">
+                <td className="py-2 pr-4"><code className="inline-code">analyticsEngineDatasets</code></td>
+                <td className="py-2 pr-4"><code className="inline-code">Record&lt;string, string&gt;</code></td>
+                <td className="py-2 pr-4"><code className="inline-code">{"{}"}</code></td>
+                <td className="py-2">Binding name → Analytics Engine dataset shorthand</td>
               </tr>
               <tr className="border-b border-denim-800">
                 <td className="py-2 pr-4"><code className="inline-code">compatibilityDate</code></td>

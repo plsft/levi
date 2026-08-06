@@ -221,6 +221,23 @@ export default function CoreConceptsPage() {
       </div>
 
       <p>
+        This table is a sample — Levi covers every Cloudflare primitive with
+        29 factory methods across compute, storage, AI, observability
+        (Analytics Engine, tail workers, Browser Rendering), platform
+        (dispatch namespaces, Email, rate limiters, Secrets Store), and the
+        zone edge (redirects, cache rules, WAF, HTTP rate limiting, header
+        transforms, Snippets). See the{" "}
+        <Link href="/docs" className="text-wash-400 hover:text-wash-300">
+          docs index
+        </Link>{" "}
+        for the full catalog, or{" "}
+        <Link href="/docs/edge-rules" className="text-wash-400 hover:text-wash-300">
+          Edge Rules
+        </Link>{" "}
+        for the zone-level layer new in 0.4.0.
+      </p>
+
+      <p>
         Levi resolves logical names to physical IDs automatically. You never
         write a TOML config by hand — the framework generates a{" "}
         <code className="inline-code">wrangler.jsonc</code> for every worker
