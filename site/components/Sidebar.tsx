@@ -9,6 +9,7 @@ const sections = [
     links: [
       { href: "/getting-started", label: "Installation & Setup" },
       { href: "/docs/core-concepts", label: "Core Concepts" },
+      { href: "/why-levi", label: "Why Levi?" },
     ],
   },
   {
@@ -42,10 +43,29 @@ const sections = [
     ],
   },
   {
+    title: "Edge",
+    links: [{ href: "/docs/edge-rules", label: "Edge Rules & Snippets" }],
+  },
+  {
+    title: "Platform",
+    links: [
+      { href: "/docs/platforms", label: "Workers for Platforms" },
+      { href: "/docs/email", label: "Email" },
+      { href: "/docs/bindings", label: "More Bindings" },
+    ],
+  },
+  {
     title: "Frameworks",
     links: [
-      { href: "/docs/vinext", label: "vinext (Recommended)" },
+      { href: "/docs/vinext", label: "vinext" },
       { href: "/docs/tanstack", label: "TanStack SPA" },
+    ],
+  },
+  {
+    title: "Examples",
+    links: [
+      { href: "/examples", label: "Example Apps" },
+      { href: "/examples/tanstack", label: "TanStack Invoice SaaS" },
     ],
   },
   {

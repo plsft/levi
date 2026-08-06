@@ -2,6 +2,12 @@ export default {
   async fetch(request, env) {
     const url = new URL(request.url);
 
+    // flarefound.com is being sunset — permanently redirect to the new home
+    if (url.hostname === "levi.flarefound.com") {
+      url.hostname = "levi.plsft.com";
+      return Response.redirect(url.toString(), 301);
+    }
+
     // Serve static assets from the ASSETS binding
     const response = await env.ASSETS.fetch(request);
 

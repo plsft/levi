@@ -16,7 +16,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        <link rel="canonical" href="https://levi.flarefound.com" />
+        <link rel="canonical" href="https://levi.plsft.com" />
         <link rel="sitemap" href="/sitemap.xml" />
         <link rel="alternate" type="text/plain" href="/llms.txt" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />

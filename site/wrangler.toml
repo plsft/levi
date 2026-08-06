@@ -1,12 +1,15 @@
 name = "levi-site"
 main = "src/worker.js"
 compatibility_date = "2026-04-01"
+account_id = "7509d166af8dbf52b9a7d78604255d09"
 
 routes = [
+  { pattern = "levi.plsft.com", custom_domain = true },
   { pattern = "levi.flarefound.com/*", zone_name = "flarefound.com" }
 ]
 
 [assets]
 directory = "./dist"
 binding = "ASSETS"
-fallback = "index.html"
+not_found_handling = "single-page-application"
+run_worker_first = true

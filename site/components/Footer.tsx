@@ -130,16 +130,6 @@ export function Footer() {
               </li>
               <li>
                 <a
-                  href="https://flarefound.com"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-sm text-denim-400 hover:text-wash-400 transition-colors"
-                >
-                  Flarefound
-                </a>
-              </li>
-              <li>
-                <a
                   href="/llms.txt"
                   className="text-sm text-denim-400 hover:text-wash-400 transition-colors"
                 >
@@ -155,10 +145,10 @@ export function Footer() {
           <p className="text-xs text-denim-500">
             &copy; {new Date().getFullYear()}{" "}
             <a
-              href="https://flarefound.com"
+              href="https://plsft.com"
               className="hover:text-wash-400 transition-colors"
             >
-              Flarefound
+              Plural Software
             </a>
             . MIT License.
           </p>

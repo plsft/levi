@@ -127,7 +127,7 @@ export default function ExamplesPage() {
         <p>
           A production-ready full-stack application: vinext SSR frontend, Hono
           API backend, D1 database, KV for sessions, R2 for file uploads, and
-          service bindings connecting front to back. This is the recommended
+          service bindings connecting front to back. This is a solid
           architecture for most web applications.
         </p>
 

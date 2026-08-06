@@ -28,8 +28,14 @@ class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boole
 
 // Lazy-load all pages
 const Home = lazy(() => import("./app/page"));
+const WhyLevi = lazy(() => import("./app/why-levi/page"));
 const GettingStarted = lazy(() => import("./app/getting-started/page"));
+const EdgeRules = lazy(() => import("./app/docs/edge-rules/page"));
+const Platforms = lazy(() => import("./app/docs/platforms/page"));
+const Email = lazy(() => import("./app/docs/email/page"));
+const Bindings = lazy(() => import("./app/docs/bindings/page"));
 const Examples = lazy(() => import("./app/examples/page"));
+const ExamplesTanstack = lazy(() => import("./app/examples/tanstack/page"));
 const DocsIndex = lazy(() => import("./app/docs/page"));
 const CoreConcepts = lazy(() => import("./app/docs/core-concepts/page"));
 const Workers = lazy(() => import("./app/docs/workers/page"));
@@ -75,8 +81,14 @@ export function App() {
           <ErrorBoundary>
             <Routes>
               <Route path="/" element={<Home />} />
+              <Route path="/why-levi" element={<WhyLevi />} />
               <Route path="/getting-started" element={<GettingStarted />} />
+              <Route path="/docs/edge-rules" element={<EdgeRules />} />
+              <Route path="/docs/platforms" element={<Platforms />} />
+              <Route path="/docs/email" element={<Email />} />
+              <Route path="/docs/bindings" element={<Bindings />} />
               <Route path="/examples" element={<Examples />} />
+              <Route path="/examples/tanstack" element={<ExamplesTanstack />} />
               <Route path="/docs" element={<DocsIndex />} />
               <Route path="/docs/core-concepts" element={<CoreConcepts />} />
               <Route path="/docs/workers" element={<Workers />} />

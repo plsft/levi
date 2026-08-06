@@ -16,6 +16,11 @@ const categories = [
         title: "Core Concepts",
         desc: "Understand the App Graph, resources, bindings, and the build pipeline.",
       },
+      {
+        href: "/why-levi",
+        title: "Why Levi?",
+        desc: "How Levi compares to Aspire, SST, Alchemy, Terraform, and plain wrangler.",
+      },
     ],
   },
   {
@@ -99,6 +104,54 @@ const categories = [
         href: "/docs/environments",
         title: "Environments",
         desc: "Staging, production, and preview environments with config isolation.",
+      },
+    ],
+  },
+  {
+    title: "Edge",
+    description: "Zone-level rules and edge code — no Terraform required",
+    cards: [
+      {
+        href: "/docs/edge-rules",
+        title: "Edge Rules & Snippets",
+        desc: "Redirects, cache rules, WAF, HTTP rate limiting, header transforms, and Snippets — declared in levi.app.ts.",
+      },
+    ],
+  },
+  {
+    title: "Platform",
+    description: "Multi-tenant SaaS, email, and account-level bindings",
+    cards: [
+      {
+        href: "/docs/platforms",
+        title: "Workers for Platforms",
+        desc: "Dispatch namespaces and outbound workers for running tenant code at scale.",
+      },
+      {
+        href: "/docs/email",
+        title: "Email",
+        desc: "send_email bindings with Email Routing provisioning and address verification.",
+      },
+      {
+        href: "/docs/bindings",
+        title: "More Bindings",
+        desc: "Analytics Engine, Browser Rendering, rate limiters, Secrets Store, and tail workers.",
+      },
+    ],
+  },
+  {
+    title: "Beta",
+    description: "Newer Cloudflare primitives with first-class support",
+    cards: [
+      {
+        href: "/docs/containers",
+        title: "Containers",
+        desc: "Run Docker images alongside Workers, backed by Durable Objects.",
+      },
+      {
+        href: "/docs/pipelines",
+        title: "Pipelines",
+        desc: "Ingest, transform, and deliver data streams to R2.",
       },
     ],
   },

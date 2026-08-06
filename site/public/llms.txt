@@ -6,7 +6,7 @@
 - Package: `@flarefound/levi`
 - Repository: https://github.com/plsft/levi
 - License: MIT
-- Current version: 0.3.0
+- Current version: 0.4.0
 - Requires: Node.js >= 18, wrangler >= 3.0.0 (peer dependency)
 
 ## What Levi Does
@@ -348,6 +348,18 @@ Durable, step-based execution. Each step is independently retryable. Survives cr
 ### Tail Workers — `app.addTailWorker(name, options)`
 
 Consume log events from other Workers for custom logging/observability.
+Tail workers get their own generated wrangler config and deploy before their
+producers. Producers declare them via the `tailConsumers` worker option:
+
+```typescript
+const sink = app.addTailWorker("log-sink", { entrypoint: "./src/sink.ts" });
+
+const api = app.addWorker("api", {
+  entrypoint: "./src/index.ts",
+  tailConsumers: [sink],              // or a raw service name string
+});
+// Generated: "tail_consumers": [{ "service": "log-sink" }]
+```
 
 ### mTLS — `app.addMTLS(name, options)`
 
@@ -379,6 +391,180 @@ const pipeline = app.addPipeline("events", {
 ```
 
 Data ingestion, transformation, and delivery to R2.
+
+### Analytics Engine — `app.addAnalyticsEngine(name, options?)`
+
+```typescript
+const metrics = app.addAnalyticsEngine("usage-events", {
+  dataset: "usage_events",           // default: the resource name
+});
+// Worker runtime: env.METRICS.writeDataPoint({ blobs, doubles, indexes })
+```
+
+| Option | Type | Default | Description |
+|---|---|---|---|
+| `dataset` | `string` | resource name | Dataset written to; auto-created on first write |
+
+### Browser Rendering — `app.addBrowserRendering()`
+
+```typescript
+const browser = app.addBrowserRendering();  // singleton, like addWorkersAI()
+// bindings: { BROWSER: browser } → runtime: puppeteer.launch(env.BROWSER)
+```
+
+Nothing to provision — an account capability. The `browser: true` worker
+option is an equivalent shorthand.
+
+### Rate Limiting — `app.addRateLimit(name, options)`
+
+The Workers rate limiting *binding* (in-Worker counters). For zone-edge
+HTTP rate limiting, see `app.addRateLimitRule()` under Edge Rules.
+
+```typescript
+const limiter = app.addRateLimit("api-limiter", {
+  limit: 100,                        // ops per period
+  period: 60,                        // seconds; only 10 or 60
+  namespaceId: "1001",               // optional; derived from name if omitted
+});
+// Worker runtime: const { success } = await env.LIMITER.limit({ key: ip });
+```
+
+| Option | Type | Default | Description |
+|---|---|---|---|
+| `limit` | `number` | required | Max operations per period |
+| `period` | `10 \| 60` | required | Counting period in seconds (validated at build) |
+| `namespaceId` | `string` (digits) | FNV-1a hash of name | Counters shared across Workers with the same ID |
+
+### Secrets Store — `app.addSecretsStoreSecret(name, options?)`
+
+```typescript
+const stripeKey = app.addSecretsStoreSecret("stripe-api-key");
+// bindings: { STRIPE_KEY: stripeKey } → runtime: await env.STRIPE_KEY.get()
+```
+
+| Option | Type | Default | Description |
+|---|---|---|---|
+| `secretName` | `string` | resource name | Secret name inside the store |
+| `storeId` | `string` | provisioned | 32-hex store ID; patched by `levi provision` |
+| `storeName` | `string` | `"default"` | Store created during provisioning (beta: one per account) |
+
+Secret *values* are set with `wrangler secrets-store secret create <store-id>
+--name <name> --scopes workers --remote` — never in the app file.
+
+### Dispatch Namespaces (Workers for Platforms) — `app.addDispatchNamespace(name, options?)`
+
+Run untrusted tenant Workers for multi-tenant SaaS. Requires a Workers for
+Platforms subscription.
+
+```typescript
+const guard = app.addWorker("outbound-guard", { entrypoint: "./src/guard.ts" });
+const tenants = app.addDispatchNamespace("customers-prod", {
+  outbound: { service: guard, parameters: ["customer_id"] },
+});
+// bindings: { DISPATCH: tenants } → runtime: env.DISPATCH.get(scriptName).fetch(req)
+```
+
+| Option | Type | Default | Description |
+|---|---|---|---|
+| `namespace` | `string` | resource name | Cloudflare namespace name |
+| `outbound` | `{ service, parameters? }` | — | Outbound Worker intercepting tenant egress |
+| `remote` | `boolean` | — | Connect to the remote namespace in `wrangler dev` |
+
+### Email — `app.addEmail(name, options?)`
+
+The `send_email` binding. `levi provision` enables Email Routing on the zone
+and registers destination addresses (recipient must click a verification link).
+
+```typescript
+const notify = app.addEmail("ops-notify", {
+  destinationAddress: "ops@acme.com",
+  zone: "acme.com",                  // falls back to app defaultZone
+});
+// Runtime: new EmailMessage(from, to, mime); await env.NOTIFY.send(msg);
+```
+
+| Option | Type | Default | Description |
+|---|---|---|---|
+| `destinationAddress` | `string` | — | Single verified destination (exclusive with allowlist) |
+| `allowedDestinationAddresses` | `string[]` | — | Destination allowlist (exclusive with single) |
+| `allowedSenderAddresses` | `string[]` | — | Restrict sender addresses |
+| `remote` | `boolean` | — | Use the real API in `wrangler dev` |
+| `zone` | `string` | `defaultZone` | Zone to enable Email Routing on |
+
+---
+
+## Edge Rules & Snippets (zone-level)
+
+Zone configuration declared next to your workers — territory IaC generalists
+skip. Compiled by `levi build` into `.levi/zones/<zone>.rules.json`, synced by
+`levi provision` via the Rulesets API, drift-checked by `levi diff`.
+
+**Zone resolution**: rule `zone` option → app `defaultZone` → inferred when all
+declared domains share one registrable zone → build error.
+
+**Safety model**: every Levi rule carries the description tag
+`Managed by Levi: <name>`. Provisioning mutates ONLY tagged rules through
+per-rule API calls — rules created in the dashboard or by other tools are
+never modified, reordered, or deleted. Removing a rule from the app file
+deletes only that tagged rule on the next provision.
+
+```typescript
+const app = new FlareApp("acme", {
+  compatibility_date: "2026-04-01",
+  defaultZone: "acme.com",
+});
+
+// Redirects (http_request_dynamic_redirect) — wildcard captures via ${n}
+app.addRedirect("www-to-apex", {
+  from: "https://www.acme.com/*",
+  to: "https://acme.com/${1}",
+  status: 301,                        // 301 | 302 | 307 | 308
+  preserveQueryString: true,          // default
+});
+
+// Cache rules (http_request_cache_settings)
+app.addCacheRule("static-assets", {
+  match: { pathStartsWith: "/assets/" },  // or host / path / pathWildcard; or raw expression
+  cache: true,
+  edgeTtl: 86400,                     // number = override_origin seconds, or { mode, seconds }
+  browserTtl: 3600,
+});
+
+// WAF custom rules (http_request_firewall_custom) — expression is REQUIRED
+app.addWAFRule("challenge-bots", {
+  expression: "cf.client.bot and not cf.verified_bot",
+  action: "managed_challenge",        // block | managed_challenge | js_challenge | challenge | log | skip
+});
+
+// HTTP rate limiting (http_ratelimit) — blocks before your Worker runs
+app.addRateLimitRule("login-limit", {
+  expression: 'http.request.uri.path eq "/api/login"',
+  requestsPerPeriod: 10,
+  period: 60,                         // 10 | 60 | 600 | 3600 on non-Enterprise
+  mitigationTimeout: 600,             // default: period
+  // characteristics: ["cf.colo.id", "ip.src"]  (default)
+});
+
+// Header transforms (request → origin, response → visitor)
+app.addHeaderRule("security-headers", {
+  direction: "response",
+  headers: {
+    "X-Frame-Options": "DENY",        // string = set
+    "Server": { operation: "remove" },
+    "X-Country": { operation: "set", expression: "ip.src.country" },
+  },
+});
+
+// Snippets — lightweight JS at the edge, before Workers
+app.addSnippet("ab-test", {
+  entrypoint: "./snippets/ab-test.js",
+  expression: 'http.request.uri.path eq "/"',
+});
+```
+
+Requires `CLOUDFLARE_API_TOKEN` with the relevant zone permissions (Zone WAF
+Write, Cache Settings Write, Dynamic URL Redirects Write, Transform Rules
+Write, Zone Snippets Write).
 
 ---
 
@@ -1013,7 +1199,7 @@ You can eject from Levi at any time by running `levi eject`, which copies the ge
 | `levi deploy` | Build + deploy all Workers in dependency order |
 | `levi deploy --only api` | Deploy only the named Worker |
 | `levi deploy --env staging` | Deploy to a specific environment |
-| `levi provision` | Create D1/KV/R2/DNS resources via Cloudflare API |
+| `levi provision` | Create D1/KV/R2/queues/Vectorize/dispatch namespaces/Secrets Store via wrangler; DNS, Email Routing, and edge rules via Cloudflare API |
 | `levi graph` | Print dependency graph to terminal |
 | `levi diff` | Show config changes vs. current deployment |
 | `levi eject` | Copy generated configs to project root (escape hatch) |
@@ -1155,6 +1341,7 @@ import type { ResourceType, Framework } from "@flarefound/levi/types";
 4. **Dependency-aware.** The graph ensures resources are provisioned and deployed in the correct order.
 5. **Framework-agnostic.** Use Hono, vinext, or raw Workers — Levi adapts its config generation to each.
 6. **Escape hatch.** The `wrangler` property on WorkerOptions lets you pass arbitrary wrangler.jsonc properties for features Levi doesn't yet model.
+7. **Full-platform coverage.** Levi models Cloudflare layers generalist IaC tools skip: zone edge rules (redirects, cache, WAF, HTTP rate limiting, header transforms, Snippets), Workers for Platforms dispatch namespaces, and Email Routing — all in the same app file. Unlike state-owning IaC (SST, Alchemy, Terraform), Levi keeps no state file; `levi diff` compares against live Cloudflare state directly, and Levi-managed zone rules are ownership-tagged so nothing else on the zone is ever touched.
 
 ---
 
@@ -1166,6 +1353,7 @@ import type { ResourceType, Framework } from "@flarefound/levi/types";
 | `.levi/` | Generated output directory |
 | `.levi/graph.json` | Serialized dependency graph |
 | `.levi/workers/<name>/wrangler.jsonc` | Generated Wrangler config per Worker |
+| `.levi/zones/<zone>.rules.json` | Desired-state manifest for zone edge rules & snippets |
 
 ---
 

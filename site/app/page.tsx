@@ -33,10 +33,42 @@ const primitives = [
     ],
   },
   {
+    category: "AI & Observability",
+    items: [
+      { name: "Workflows", method: ".addWorkflow()", desc: "Durable, multi-step execution with retries" },
+      { name: "Analytics Engine", method: ".addAnalyticsEngine()", desc: "Unlimited-cardinality analytics from Workers" },
+      { name: "Browser Rendering", method: ".addBrowserRendering()", desc: "Headless browser for screenshots and scraping" },
+      { name: "Tail Worker", method: ".addTailWorker()", desc: "Structured log consumers, deployed in order" },
+    ],
+  },
+  {
     category: "Network",
     items: [
       { name: "Custom Domain", method: ".addDomain()", desc: "DNS, SSL, and routing in one declaration" },
+      { name: "mTLS Certificate", method: ".addMTLS()", desc: "Client certificates for upstream calls" },
       { name: "Environment", method: "environments: {...}", desc: "staging/production config overrides" },
+    ],
+  },
+  {
+    category: "Edge",
+    items: [
+      { name: "Redirect", method: ".addRedirect()", desc: "Zone redirects with wildcard captures" },
+      { name: "Cache Rule", method: ".addCacheRule()", desc: "Edge and browser TTLs, custom cache keys" },
+      { name: "WAF Rule", method: ".addWAFRule()", desc: "Custom firewall rules in the Rules language" },
+      { name: "Rate Limit Rule", method: ".addRateLimitRule()", desc: "HTTP rate limiting before your Worker runs" },
+      { name: "Header Rule", method: ".addHeaderRule()", desc: "Request/response header transforms" },
+      { name: "Snippet", method: ".addSnippet()", desc: "Lightweight JS at the edge, before Workers" },
+    ],
+  },
+  {
+    category: "Platform",
+    items: [
+      { name: "Dispatch Namespace", method: ".addDispatchNamespace()", desc: "Workers for Platforms multi-tenant SaaS" },
+      { name: "Email", method: ".addEmail()", desc: "send_email bindings + Email Routing provisioning" },
+      { name: "Rate Limiter", method: ".addRateLimit()", desc: "In-Worker counters with limit({ key })" },
+      { name: "Secrets Store", method: ".addSecretsStoreSecret()", desc: "Account-level secrets shared across Workers" },
+      { name: "Container", method: ".addContainer()", desc: "Docker images alongside Workers (beta)" },
+      { name: "Pipeline", method: ".addPipeline()", desc: "Ingest and deliver data streams to R2 (beta)" },
     ],
   },
 ];
@@ -53,19 +85,6 @@ export default function HomePage() {
         <div className="absolute bottom-0 left-0 right-0 stitch-separator" />
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-20 sm:pb-28">
-          {/* Flarefound attribution */}
-          <div className="text-center mb-12">
-            <a
-              href="https://flarefound.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 text-xs text-denim-400 hover:text-wash-400 transition-colors"
-            >
-              A project by{" "}
-              <span className="font-semibold text-denim-300">Flarefound</span>
-            </a>
-          </div>
-
           {/* Headline */}
           <div className="text-center mb-6">
             <h1 className="inline-flex items-center gap-4">
@@ -345,9 +364,18 @@ export default function HomePage() {
                 understands. Full visibility, full control, full ejection path.
               </p>
               <div className="text-xs text-wash-500">
-                .NET Aspire, Levi, Pulumi
+                Aspire, Levi, SST, Alchemy, Terraform
               </div>
             </div>
+          </div>
+
+          <div className="text-center mt-10">
+            <Link
+              href="/why-levi"
+              className="inline-block text-sm text-wash-400 hover:text-wash-300 underline underline-offset-4 decoration-dashed"
+            >
+              How Levi compares to Aspire, SST, Alchemy, and Terraform →
+            </Link>
           </div>
         </div>
         <div className="stitch-separator" />

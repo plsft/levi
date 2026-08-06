@@ -10,7 +10,17 @@ Levi does **not** replace Wrangler. It orchestrates it.
 npm install -D @flarefound/levi
 ```
 
-**[Docs](https://levi.flarefound.com)** | **[Getting Started](https://levi.flarefound.com/getting-started)** | **[Examples](https://levi.flarefound.com/examples)** | **[GitHub](https://github.com/plsft/levi)**
+**[Docs](https://levi.plsft.com)** | **[Getting Started](https://levi.plsft.com/getting-started)** | **[Why Levi?](https://levi.plsft.com/why-levi)** | **[Examples](https://levi.plsft.com/examples)** | **[GitHub](https://github.com/plsft/levi)**
+
+## Why Levi?
+
+Aspire went polyglot, and SST/Alchemy/Terraform all speak Cloudflare. Levi exists because none of them are built for what Cloudflare actually is:
+
+- **Cloudflare is a bindings graph, not a container platform.** Aspire models processes, ports, and connection strings. Levi's type system is D1/KV/R2/DO/Queues/AI bindings, compatibility dates, routes, and custom domains — natively.
+- **IaC engines own your state; Levi refuses to.** No state file. `levi diff` compares against live Cloudflare state, and `levi eject` leaves you with plain wrangler configs and no trace of Levi. The exit is a feature.
+- **Levi covers the layers generalists skip.** Zone edge rules (redirects, cache, WAF, HTTP rate limiting, header transforms, Snippets) synced via the Rulesets API with ownership-tagged, foreign-rule-safe provisioning; Workers for Platforms dispatch namespaces; Email Routing; Analytics Engine; Secrets Store; rate limiters; Browser Rendering.
+
+If you're all-in on Cloudflare, a tool that models Cloudflare natively beats a generalist adapter. If you need multi-cloud, use SST or Terraform — genuinely. [Full comparison →](https://levi.plsft.com/why-levi)
 
 ---
 
@@ -122,9 +132,22 @@ Every Cloudflare primitive gets a typed builder method with full IntelliSense:
 | | Pipelines (beta) | `addPipeline()` |
 | **AI** | Workers AI | `addWorkersAI()` |
 | | AI Gateway | `addAIGateway()` |
+| **Observability** | Analytics Engine | `addAnalyticsEngine()` |
+| | Tail Workers | `addTailWorker()` |
+| | Browser Rendering | `addBrowserRendering()` |
 | **Network** | Custom Domains | `addDomain()` |
 | | Service Bindings | `.asService()` |
 | | mTLS | `addMTLS()` |
+| **Edge** | Redirects | `addRedirect()` |
+| | Cache Rules | `addCacheRule()` |
+| | WAF Custom Rules | `addWAFRule()` |
+| | HTTP Rate Limiting | `addRateLimitRule()` |
+| | Header Transforms | `addHeaderRule()` |
+| | Snippets | `addSnippet()` |
+| **Platform** | Dispatch Namespaces (W4P) | `addDispatchNamespace()` |
+| | Email (send_email + routing) | `addEmail()` |
+| | Rate Limiting binding | `addRateLimit()` |
+| | Secrets Store | `addSecretsStoreSecret()` |
 
 ## CLI Commands
 
@@ -241,4 +264,4 @@ This copies the configs to your project root. Delete Levi, and you're running on
 
 ## License
 
-MIT — [Flarefound](https://flarefound.com)
+MIT — [Plural Software](https://plsft.com)
