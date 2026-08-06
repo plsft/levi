@@ -30,6 +30,12 @@ export default function ExamplesPage() {
               desc: "RAG chatbot, browser-powered research agent, and a metered AI API — Workers AI, Vectorize, AI Gateway, Browser Rendering, and Analytics Engine.",
             },
             {
+              href: "/examples/react",
+              tag: "React 19",
+              title: "Plain React 19 SPA",
+              desc: "No meta-framework: Vite + React 19 Actions, useOptimistic, and use() — served by a Worker with a Hono API behind a service binding.",
+            },
+            {
               href: "/examples/platform",
               tag: "0.4.0",
               title: "Multi-Tenant SaaS Platform",
