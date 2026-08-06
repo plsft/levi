@@ -5,6 +5,7 @@ import { resolve } from "node:path";
 import { execSync } from "node:child_process";
 import { loadApp } from "../../loader.js";
 import { WranglerGenerator } from "../../generators/wrangler.js";
+import { diffZones } from "./diff-zones.js";
 
 interface WranglerDeployment {
   id: string;
@@ -281,7 +282,7 @@ export default defineCommand({
           deploymentId: remoteResult.deploymentId,
           deployedAt: remoteResult.createdOn,
         });
-        return;
+        continue;
       }
 
       // Print per-worker output
@@ -316,8 +317,35 @@ export default defineCommand({
       console.log("");
     }
 
+    // Zone-level edge rules diff (remote-only; skipped with --local)
+    let zoneDiffs: Awaited<ReturnType<typeof diffZones>> = null;
+    if (!args.local) {
+      try {
+        zoneDiffs = await diffZones(app, { json: args.json });
+        if (zoneDiffs) {
+          const zoneChanged = zoneDiffs.some((z) =>
+            Object.values(z.phases).some(
+              (p) => p.creates.length + p.updates.length + p.deletes.length > 0,
+            ),
+          );
+          hasChanges = hasChanges || zoneChanged;
+        }
+      } catch (error) {
+        consola.warn(
+          "Edge rules diff failed:",
+          error instanceof Error ? error.message : String(error),
+        );
+      }
+    }
+
     if (args.json) {
-      console.log(JSON.stringify({ env: args.env || null, diffs: jsonOut }, null, 2));
+      console.log(
+        JSON.stringify(
+          { env: args.env || null, diffs: jsonOut, zones: zoneDiffs ?? [] },
+          null,
+          2,
+        ),
+      );
       return;
     }
 

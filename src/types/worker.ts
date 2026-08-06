@@ -384,7 +384,7 @@ export interface WorkerOptions {
    *
    * @see https://developers.cloudflare.com/workers/observability/tail-workers/
    */
-  tailConsumers?: string[];
+  tailConsumers?: Array<string | { readonly name: string }>;
 
   /**
    * Enable the Workers Browser Rendering API binding.

@@ -54,6 +54,15 @@ export class WorkerResource extends Resource<WorkerOptions> {
       }
     }
 
+    // Tail workers referenced as resources must deploy before this worker
+    if (this.options.tailConsumers) {
+      for (const t of this.options.tailConsumers) {
+        if (typeof t !== "string" && t instanceof Resource) {
+          this.dependsOn(t);
+        }
+      }
+    }
+
     if (this.options.consumers) {
       for (const consumer of this.options.consumers) {
         if (consumer.queue && typeof consumer.queue === "object" && "name" in consumer.queue) {

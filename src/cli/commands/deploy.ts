@@ -125,7 +125,10 @@ export default defineCommand({
     }
 
     const graph = app.getGraph();
-    let workers = graph.nodes.filter((n) => n.type === "worker");
+    // Tail workers are deployable workers too (they get their own config)
+    let workers = graph.nodes.filter(
+      (n) => n.type === "worker" || n.type === "tail-worker",
+    );
 
     // ── Apply filter ───────────────────────────────────────────
     if (args.filter) {

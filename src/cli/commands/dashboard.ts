@@ -31,6 +31,18 @@ const TYPE_META: Record<string, { label: string; color: string; icon: string }> 
   workflow: { label: "Workflow", color: "\x1b[38;5;219m", icon: "WF" },
   "tail-worker": { label: "Tail Worker", color: "\x1b[38;5;203m", icon: "TW" },
   mtls: { label: "mTLS", color: "\x1b[38;5;174m", icon: "MT" },
+  secret: { label: "Secret", color: "\x1b[38;5;244m", icon: "**" },
+  var: { label: "Var", color: "\x1b[38;5;244m", icon: "$$" },
+  container: { label: "Container", color: "\x1b[38;5;110m", icon: "CT" },
+  pipeline: { label: "Pipeline", color: "\x1b[38;5;114m", icon: "PL" },
+  "analytics-engine": { label: "Analytics", color: "\x1b[38;5;150m", icon: "AE" },
+  "browser-rendering": { label: "Browser", color: "\x1b[38;5;208m", icon: "BR" },
+  "rate-limit": { label: "Rate Limit", color: "\x1b[38;5;196m", icon: "RL" },
+  "secrets-store-secret": { label: "Secrets Store", color: "\x1b[38;5;140m", icon: "SS" },
+  "dispatch-namespace": { label: "Dispatch NS", color: "\x1b[38;5;99m", icon: "DN" },
+  email: { label: "Email", color: "\x1b[38;5;45m", icon: "@>" },
+  "edge-rule": { label: "Edge Rule", color: "\x1b[38;5;173m", icon: "ER" },
+  snippet: { label: "Snippet", color: "\x1b[38;5;186m", icon: "SN" },
 };
 
 const RESET = "\x1b[0m";

@@ -84,6 +84,47 @@ export type { ContainerInstanceType, ContainerOptions } from "./container.js";
 // ── Pipeline (beta) ────────────────────────────────────────────
 export type { PipelineOptions } from "./pipeline.js";
 
+// ── Analytics Engine ───────────────────────────────────────────
+export type { AnalyticsEngineOptions } from "./analytics-engine.js";
+
+// ── Browser Rendering ──────────────────────────────────────────
+export type { BrowserRenderingOptions } from "./browser-rendering.js";
+
+// ── Rate Limiting ──────────────────────────────────────────────
+export type { RateLimitOptions } from "./rate-limit.js";
+
+// ── Secrets Store ──────────────────────────────────────────────
+export type { SecretsStoreSecretOptions } from "./secrets-store.js";
+
+// ── Dispatch Namespace (Workers for Platforms) ─────────────────
+export type {
+  DispatchNamespaceOutbound,
+  DispatchNamespaceOptions,
+} from "./dispatch-namespace.js";
+
+// ── Email ──────────────────────────────────────────────────────
+export type { EmailOptions } from "./email.js";
+
+// ── Edge Rules & Snippets ──────────────────────────────────────
+export type {
+  EdgeRuleKind,
+  RulesetPhase,
+  EdgeRuleBaseOptions,
+  MatchSugar,
+  RedirectRuleOptions,
+  CacheTtl,
+  CacheRuleOptions,
+  WAFRuleOptions,
+  RateLimitRuleOptions,
+  HeaderOp,
+  HeaderRuleOptions,
+  EdgeRuleOptionsUnion,
+  SnippetOptions,
+  ManifestRule,
+  ManifestSnippet,
+  ZoneRulesManifest,
+} from "./edge-rules.js";
+
 // ── Supplementary ──────────────────────────────────────────────
 export type { WorkerFramework, BuildResult } from "./resources.js";
 
@@ -106,6 +147,10 @@ export type {
   WranglerAIBinding,
   WranglerBrowserBinding,
   WranglerWorkflowBinding,
+  WranglerRateLimitBinding,
+  WranglerSecretsStoreSecretBinding,
+  WranglerDispatchNamespaceBinding,
+  WranglerSendEmailBinding,
   WranglerRoute,
   WranglerCronTrigger,
   WranglerTailConsumer,

@@ -241,7 +241,11 @@ describe("PROVISIONABLE_TYPES", () => {
     expect(PROVISIONABLE_TYPES.has("domain")).toBe(false);
   });
 
-  it("has exactly 5 types", () => {
-    expect(PROVISIONABLE_TYPES.size).toBe(5);
+  it("contains dispatch-namespace", () => {
+    expect(PROVISIONABLE_TYPES.has("dispatch-namespace")).toBe(true);
+  });
+
+  it("has exactly 6 types", () => {
+    expect(PROVISIONABLE_TYPES.size).toBe(6);
   });
 });

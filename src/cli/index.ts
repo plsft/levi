@@ -3,7 +3,7 @@ import { defineCommand, runMain } from "citty";
 const main = defineCommand({
   meta: {
     name: "levi",
-    version: "0.1.0",
+    version: "0.4.0",
     description:
       "The AppHost Framework for Cloudflare — Aspire for Cloudflare. Declare your entire Cloudflare topology in TypeScript.",
   },

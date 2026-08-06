@@ -35,7 +35,15 @@ export type ResourceType =
   | "secret"
   | "var"
   | "container"
-  | "pipeline";
+  | "pipeline"
+  | "analytics-engine"
+  | "browser-rendering"
+  | "rate-limit"
+  | "secrets-store-secret"
+  | "dispatch-namespace"
+  | "email"
+  | "edge-rule"
+  | "snippet";
 
 // ---------------------------------------------------------------------------
 // Framework
@@ -412,4 +420,13 @@ export interface AppOptions {
    * @default ".levi"
    */
   outDir?: string;
+
+  /**
+   * Default Cloudflare zone (e.g. `"example.com"`) for edge rules and
+   * snippets that don't specify their own `zone` option.
+   *
+   * Most applications live on a single zone; setting this once lets every
+   * `addRedirect()`, `addCacheRule()`, `addWAFRule()`, etc. omit the zone.
+   */
+  defaultZone?: string;
 }

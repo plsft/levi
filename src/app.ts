@@ -40,6 +40,32 @@ import { PipelineResource } from "./resources/pipeline.js";
 import type { TailWorkerOptions } from "./resources/tail-worker.js";
 import type { MTLSOptions } from "./resources/mtls.js";
 
+import { AnalyticsEngineResource } from "./resources/analytics-engine.js";
+import { BrowserRenderingResource } from "./resources/browser-rendering.js";
+import { RateLimitResource } from "./resources/rate-limit.js";
+import { SecretsStoreSecretResource } from "./resources/secrets-store-secret.js";
+import { DispatchNamespaceResource } from "./resources/dispatch-namespace.js";
+import { EmailResource } from "./resources/email.js";
+import { EdgeRuleResource } from "./resources/edge-rule.js";
+import { SnippetResource } from "./resources/snippet.js";
+
+import type { AnalyticsEngineOptions } from "./types/analytics-engine.js";
+import type { BrowserRenderingOptions } from "./types/browser-rendering.js";
+import type { RateLimitOptions } from "./types/rate-limit.js";
+import type { SecretsStoreSecretOptions } from "./types/secrets-store.js";
+import type { DispatchNamespaceOptions } from "./types/dispatch-namespace.js";
+import type { EmailOptions } from "./types/email.js";
+import type {
+  RedirectRuleOptions,
+  CacheRuleOptions,
+  WAFRuleOptions,
+  RateLimitRuleOptions,
+  HeaderRuleOptions,
+  SnippetOptions,
+  EdgeRuleOptionsUnion,
+  EdgeRuleKind,
+} from "./types/edge-rules.js";
+
 import { logger } from "./utils/logger.js";
 
 /**
@@ -84,6 +110,9 @@ export class FlareApp {
   /** Accumulated plain-text vars. */
   private readonly _vars: Map<string, VarRef> = new Map();
 
+  /** Monotonic declaration counter for edge rules and snippets (ordering contract). */
+  private _edgeDeclarationCounter = 0;
+
   constructor(name: string, options?: Partial<AppOptions>) {
     this.name = name;
     this.options = {
@@ -93,6 +122,7 @@ export class FlareApp {
       environments: options?.environments,
       basePath: options?.basePath,
       outDir: options?.outDir ?? ".levi",
+      defaultZone: options?.defaultZone,
     };
     this.graph = new AppGraph();
   }
@@ -269,6 +299,191 @@ export class FlareApp {
    */
   addPipeline(name: string, options: PipelineOptions): PipelineResource {
     const resource = new PipelineResource(name, options);
+    this.graph.add(resource);
+    return resource;
+  }
+
+  // ─── Observability & Platform ────────────────────────────────
+
+  /**
+   * Add a Workers Analytics Engine dataset to the application.
+   *
+   * Datasets are created automatically on first write — nothing is
+   * provisioned. The binding exposes `writeDataPoint()` in the worker.
+   */
+  addAnalyticsEngine(
+    name: string,
+    options?: AnalyticsEngineOptions,
+  ): AnalyticsEngineResource {
+    const resource = new AnalyticsEngineResource(name, options ?? {});
+    this.graph.add(resource);
+    return resource;
+  }
+
+  /**
+   * Add a Browser Rendering binding to the application.
+   *
+   * Like Workers AI, only one Browser Rendering binding is typically
+   * needed per app; pass the returned resource to any worker's bindings.
+   */
+  addBrowserRendering(options?: BrowserRenderingOptions): BrowserRenderingResource {
+    const name = "browser-rendering";
+    const resource = new BrowserRenderingResource(name, options ?? {});
+    this.graph.add(resource);
+    return resource;
+  }
+
+  /**
+   * Add a Workers rate limiting binding to the application.
+   *
+   * Provides a fast per-colo counter with a `limit({ key })` API.
+   * Workers sharing the same namespace ID share counters.
+   */
+  addRateLimit(name: string, options: RateLimitOptions): RateLimitResource {
+    const resource = new RateLimitResource(name, options);
+    this.graph.add(resource);
+    return resource;
+  }
+
+  /**
+   * Add a Secrets Store secret binding to the application.
+   *
+   * `levi provision` creates the store (if needed) and patches its ID
+   * into the generated config. Secret values are set separately via
+   * `wrangler secrets-store secret create`.
+   */
+  addSecretsStoreSecret(
+    name: string,
+    options?: SecretsStoreSecretOptions,
+  ): SecretsStoreSecretResource {
+    const resource = new SecretsStoreSecretResource(name, options ?? {});
+    this.graph.add(resource);
+    return resource;
+  }
+
+  /**
+   * Add a Workers for Platforms dispatch namespace to the application.
+   *
+   * Requires a Workers for Platforms subscription. The dispatch worker
+   * binds to the namespace and routes requests to tenant workers via
+   * `env.BINDING.get(scriptName)`.
+   */
+  addDispatchNamespace(
+    name: string,
+    options?: DispatchNamespaceOptions,
+  ): DispatchNamespaceResource {
+    const resource = new DispatchNamespaceResource(name, options ?? {});
+    this.graph.add(resource);
+    return resource;
+  }
+
+  /**
+   * Add an Email sending binding (`send_email`) to the application.
+   *
+   * `levi provision` can enable Email Routing on the zone and register
+   * the destination addresses for verification.
+   */
+  addEmail(name: string, options?: EmailOptions): EmailResource {
+    const resource = new EmailResource(name, options ?? {});
+    this.graph.add(resource);
+    return resource;
+  }
+
+  // ─── Edge Rules ──────────────────────────────────────────────
+
+  /** Internal: create and register an edge rule resource. */
+  private addEdgeRule(
+    name: string,
+    kind: EdgeRuleKind,
+    options: EdgeRuleOptionsUnion,
+  ): EdgeRuleResource {
+    const resource = new EdgeRuleResource(
+      name,
+      kind,
+      options,
+      this._edgeDeclarationCounter++,
+    );
+    this.graph.add(resource);
+    return resource;
+  }
+
+  /**
+   * Add a URL redirect rule at the zone edge.
+   *
+   * Compiled into the zone's `http_request_dynamic_redirect` phase and
+   * synced by `levi provision`. Supports wildcard captures:
+   *
+   * @example
+   * ```ts
+   * app.addRedirect("www-to-apex", {
+   *   from: "https://www.example.com/*",
+   *   to: "https://example.com/${1}",
+   *   status: 301,
+   * });
+   * ```
+   */
+  addRedirect(name: string, options: RedirectRuleOptions): EdgeRuleResource {
+    return this.addEdgeRule(name, "redirect", options);
+  }
+
+  /**
+   * Add a cache rule at the zone edge (`http_request_cache_settings`).
+   *
+   * @example
+   * ```ts
+   * app.addCacheRule("static-assets", {
+   *   match: { pathStartsWith: "/assets/" },
+   *   cache: true,
+   *   edgeTtl: 86400,
+   * });
+   * ```
+   */
+  addCacheRule(name: string, options: CacheRuleOptions): EdgeRuleResource {
+    return this.addEdgeRule(name, "cache", options);
+  }
+
+  /**
+   * Add a WAF custom rule at the zone edge (`http_request_firewall_custom`).
+   *
+   * Security predicates are written explicitly in the Rules language —
+   * there is deliberately no expression sugar here.
+   */
+  addWAFRule(name: string, options: WAFRuleOptions): EdgeRuleResource {
+    return this.addEdgeRule(name, "waf", options);
+  }
+
+  /**
+   * Add an HTTP rate limiting rule at the zone edge (`http_ratelimit`).
+   *
+   * Blocks abusive traffic before it reaches your workers — distinct
+   * from the Workers rate limiting *binding* (`addRateLimit`).
+   */
+  addRateLimitRule(name: string, options: RateLimitRuleOptions): EdgeRuleResource {
+    return this.addEdgeRule(name, "rate-limit", options);
+  }
+
+  /**
+   * Add a header transform rule at the zone edge.
+   *
+   * `direction: "request"` modifies headers sent to the origin;
+   * `direction: "response"` modifies headers returned to visitors.
+   */
+  addHeaderRule(name: string, options: HeaderRuleOptions): EdgeRuleResource {
+    const kind: EdgeRuleKind =
+      options.direction === "request" ? "request-header" : "response-header";
+    return this.addEdgeRule(name, kind, options);
+  }
+
+  /**
+   * Add a Cloudflare Snippet — a lightweight JS module that runs at the
+   * zone edge before Workers, with a rule controlling when it executes.
+   */
+  addSnippet(name: string, options: SnippetOptions): SnippetResource {
+    const resource = new SnippetResource(
+      name,
+      options,
+      this._edgeDeclarationCounter++,
+    );
     this.graph.add(resource);
     return resource;
   }

@@ -4,6 +4,7 @@ import { mkdirSync, writeFileSync } from "node:fs";
 import { resolve, dirname } from "node:path";
 import { loadApp } from "../../loader.js";
 import { WranglerGenerator } from "../../generators/wrangler.js";
+import { generateZoneManifests } from "../../generators/edge-rules.js";
 
 export default defineCommand({
   meta: {
@@ -84,7 +85,27 @@ export default defineCommand({
     writeFileSync(graphPath, JSON.stringify(graph.serialize(), null, 2));
     consola.success("Generated graph.json");
 
+    // Zone-level edge rules & snippets → desired-state manifests
+    let zoneCount = 0;
+    try {
+      const manifests = generateZoneManifests(app);
+      for (const [zone, manifest] of manifests) {
+        const zonePath = resolve(outDir, "zones", `${zone}.rules.json`);
+        mkdirSync(dirname(zonePath), { recursive: true });
+        writeFileSync(zonePath, JSON.stringify(manifest, null, 2));
+        consola.success(`Generated zones/${zone}.rules.json`);
+        zoneCount++;
+      }
+    } catch (error) {
+      consola.error(
+        "Edge rules validation failed:",
+        error instanceof Error ? error.message : error,
+      );
+      process.exit(1);
+    }
+
     const envNote = args.env ? ` [env: ${args.env}]` : "";
-    consola.info(`Build complete${envNote}: ${workers.length} worker(s), ${graph.nodes.length} total resource(s)`);
+    const zoneNote = zoneCount > 0 ? `, ${zoneCount} zone manifest(s)` : "";
+    consola.info(`Build complete${envNote}: ${workers.length} worker(s), ${graph.nodes.length} total resource(s)${zoneNote}`);
   },
 });

@@ -291,6 +291,99 @@ export interface WranglerBrowserBinding {
 }
 
 /**
+ * A Workers rate limiting binding in wrangler.jsonc.
+ *
+ * Note: rate limit entries use `name` (not `binding`) for the env
+ * accessor, and `namespace_id` is a string-encoded positive integer.
+ *
+ * @see https://developers.cloudflare.com/workers/runtime-apis/bindings/rate-limit/
+ */
+export interface WranglerRateLimitBinding {
+  /** Binding name available as `env.NAME` at runtime. */
+  name: string;
+
+  /**
+   * Numeric namespace ID as a string, unique within the account.
+   * Counters are shared across Workers using the same ID.
+   */
+  namespace_id: string;
+
+  /** The rate limit configuration. */
+  simple: {
+    /** Max operations per period. */
+    limit: number;
+
+    /** Period in seconds — only 10 or 60 are supported. */
+    period: number;
+  };
+}
+
+/**
+ * A Secrets Store secret binding in wrangler.jsonc.
+ *
+ * @see https://developers.cloudflare.com/secrets-store/
+ */
+export interface WranglerSecretsStoreSecretBinding {
+  /** Binding name available as `env.BINDING` at runtime. */
+  binding: string;
+
+  /** The Secrets Store ID (32-char hex). */
+  store_id: string;
+
+  /** The secret name inside the store. */
+  secret_name: string;
+}
+
+/**
+ * A Workers for Platforms dispatch namespace binding in wrangler.jsonc.
+ *
+ * @see https://developers.cloudflare.com/cloudflare-for-platforms/workers-for-platforms/
+ */
+export interface WranglerDispatchNamespaceBinding {
+  /** Binding name available as `env.BINDING` at runtime. */
+  binding: string;
+
+  /** The dispatch namespace name. */
+  namespace: string;
+
+  /** Outbound Worker intercepting egress from namespaced Workers. */
+  outbound?: {
+    /** The outbound Worker service name. */
+    service: string;
+
+    /** Parameter names passed to the outbound Worker. */
+    parameters?: string[];
+  };
+
+  /** Connect to the remote namespace during local dev. */
+  remote?: boolean;
+}
+
+/**
+ * An Email sending binding (`send_email`) in wrangler.jsonc.
+ *
+ * Note: send_email entries use `name` (not `binding`) for the env accessor.
+ *
+ * @see https://developers.cloudflare.com/email-routing/email-workers/send-email-workers/
+ */
+export interface WranglerSendEmailBinding {
+  /** Binding name available as `env.NAME` at runtime. */
+  name: string;
+
+  /** Restrict sending to a single verified destination address. */
+  destination_address?: string;
+
+  /** Restrict sending to an allowlist of verified destination addresses. */
+  allowed_destination_addresses?: string[];
+
+  /** Restrict which sender addresses this binding may use. */
+  allowed_sender_addresses?: string[];
+
+  /** Use the real Email Routing API during local dev. */
+  remote?: boolean;
+}
+
+/**
  * A Workflow binding in wrangler.jsonc.
  *
  * @see https://developers.cloudflare.com/workflows/
@@ -571,6 +664,18 @@ export interface WranglerEnvironment {
 
   /** Override tail consumers. */
   tail_consumers?: WranglerTailConsumer[];
+
+  /** Override rate limiting bindings. */
+  ratelimits?: WranglerRateLimitBinding[];
+
+  /** Override Secrets Store secret bindings. */
+  secrets_store_secrets?: WranglerSecretsStoreSecretBinding[];
+
+  /** Override dispatch namespace bindings. */
+  dispatch_namespaces?: WranglerDispatchNamespaceBinding[];
+
+  /** Override email sending bindings. */
+  send_email?: WranglerSendEmailBinding[];
 }
 
 // ---------------------------------------------------------------------------
@@ -700,6 +805,21 @@ export interface WranglerConfig {
 
   /** Workflow bindings. */
   workflows?: WranglerWorkflowBinding[];
+
+  /**
+   * Workers rate limiting bindings.
+   * Requires a recent wrangler version (the `ratelimits` key went GA in late 2025).
+   */
+  ratelimits?: WranglerRateLimitBinding[];
+
+  /** Secrets Store secret bindings. */
+  secrets_store_secrets?: WranglerSecretsStoreSecretBinding[];
+
+  /** Workers for Platforms dispatch namespace bindings. */
+  dispatch_namespaces?: WranglerDispatchNamespaceBinding[];
+
+  /** Email sending bindings. */
+  send_email?: WranglerSendEmailBinding[];
 
   // ── Variables & Secrets ───────────────────────────────────────
 

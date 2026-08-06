@@ -1,6 +1,6 @@
 {
   "name": "@flarefound/levi",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "The AppHost Framework for Cloudflare — Aspire for Cloudflare",
   "type": "module",
   "main": "./dist/index.js",
@@ -43,7 +43,7 @@
     "durable-objects",
     "vinext"
   ],
-  "author": "Flarefound <hello@flarefound.com>",
+  "author": "Plural Software <george@pluralsoftware.com>",
   "license": "MIT",
   "repository": {
     "type": "git",

@@ -20,6 +20,16 @@ const TYPE_LABELS: Record<string, string> = {
   mtls: "mTLS Certificates",
   secret: "Secrets",
   var: "Variables",
+  container: "Containers",
+  pipeline: "Pipelines",
+  "analytics-engine": "Analytics Engine",
+  "browser-rendering": "Browser Rendering",
+  "rate-limit": "Rate Limiters",
+  "secrets-store-secret": "Secrets Store Secrets",
+  "dispatch-namespace": "Dispatch Namespaces",
+  email: "Email Bindings",
+  "edge-rule": "Edge Rules",
+  snippet: "Snippets",
 };
 
 /** Icons for resource types (using simple ASCII). */
@@ -40,6 +50,16 @@ const TYPE_ICONS: Record<string, string> = {
   mtls: "TL",
   secret: "**",
   var: "$$",
+  container: "CT",
+  pipeline: "PL",
+  "analytics-engine": "AE",
+  "browser-rendering": "BR",
+  "rate-limit": "RL",
+  "secrets-store-secret": "SS",
+  "dispatch-namespace": "DN",
+  email: "@>",
+  "edge-rule": "ER",
+  snippet: "SN",
 };
 
 export default defineCommand({

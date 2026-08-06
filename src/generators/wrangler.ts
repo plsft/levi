@@ -14,6 +14,29 @@ import { MTLSResource } from "../resources/mtls.js";
 import { WorkflowResource } from "../resources/workflow.js";
 import { ContainerResource } from "../resources/container.js";
 import { PipelineResource } from "../resources/pipeline.js";
+import { TailWorkerResource } from "../resources/tail-worker.js";
+import { AnalyticsEngineResource } from "../resources/analytics-engine.js";
+import { BrowserRenderingResource } from "../resources/browser-rendering.js";
+import { RateLimitResource } from "../resources/rate-limit.js";
+import { SecretsStoreSecretResource } from "../resources/secrets-store-secret.js";
+import { DispatchNamespaceResource } from "../resources/dispatch-namespace.js";
+import { EmailResource } from "../resources/email.js";
+import { logger } from "../utils/logger.js";
+
+/**
+ * Derive a stable numeric namespace ID (decimal string) from a resource
+ * name via a 32-bit FNV-1a hash. Deterministic across builds so rate
+ * limit counters keep their identity between deploys.
+ */
+export function deriveRateLimitNamespaceId(name: string): string {
+  let hash = 0x811c9dc5;
+  for (let i = 0; i < name.length; i++) {
+    hash ^= name.charCodeAt(i);
+    hash = Math.imul(hash, 0x01000193);
+  }
+  // Mask to a positive 31-bit integer (namespace IDs must be positive)
+  return String(hash >>> 1);
+}
 
 /**
  * Generates valid `wrangler.jsonc` content from the Levi app graph.
@@ -155,6 +178,32 @@ export class WranglerGenerator {
       config.logpush = opts.logpush;
     }
 
+    // Tail consumers — accepts service names or TailWorkerResource refs
+    if (opts.tailConsumers && opts.tailConsumers.length > 0) {
+      if (!config.tail_consumers) config.tail_consumers = [];
+      for (const t of opts.tailConsumers) {
+        const service = typeof t === "string" ? t : t.name;
+        if (!config.tail_consumers.some((c) => c.service === service)) {
+          config.tail_consumers.push({ service });
+        }
+      }
+    }
+
+    // Browser Rendering boolean shorthand (bindings-map resource wins)
+    if (opts.browser === true && !config.browser) {
+      config.browser = { binding: "BROWSER" };
+    }
+
+    // Analytics Engine shorthand map (bindings-map resources win on key collision)
+    if (opts.analyticsEngineDatasets) {
+      if (!config.analytics_engine_datasets) config.analytics_engine_datasets = [];
+      for (const [binding, dataset] of Object.entries(opts.analyticsEngineDatasets)) {
+        if (!config.analytics_engine_datasets.some((d) => d.binding === binding)) {
+          config.analytics_engine_datasets.push({ binding, dataset });
+        }
+      }
+    }
+
     // Observability
     if (opts.observability) {
       config.observability = {
@@ -231,6 +280,17 @@ export class WranglerGenerator {
       configs.set(worker.name, this.generateForWorker(worker));
     }
 
+    // Tail workers are real workers too — they need their own config to
+    // be deployable (before the producers that reference them).
+    const tailWorkers = this.app.graph.getByType<TailWorkerResource>("tail-worker");
+    for (const tw of tailWorkers) {
+      const proxy = new WorkerResource(tw.name, {
+        entrypoint: tw.options.entrypoint,
+        bindings: tw.options.bindings,
+      });
+      configs.set(tw.name, this.generateForWorker(proxy));
+    }
+
     return configs;
   }
 
@@ -289,6 +349,29 @@ export class WranglerGenerator {
         this.addContainerBinding(config, bindingName, value);
       } else if (value instanceof PipelineResource) {
         this.addPipelineBinding(config, bindingName, value);
+      } else if (value instanceof AnalyticsEngineResource) {
+        this.addAnalyticsEngineBinding(config, bindingName, value);
+      } else if (value instanceof BrowserRenderingResource) {
+        this.addBrowserRenderingBinding(config, bindingName, value);
+      } else if (value instanceof RateLimitResource) {
+        this.addRateLimitBinding(config, bindingName, value);
+      } else if (value instanceof SecretsStoreSecretResource) {
+        this.addSecretsStoreSecretBinding(config, bindingName, value);
+      } else if (value instanceof DispatchNamespaceResource) {
+        this.addDispatchNamespaceBinding(config, bindingName, value);
+      } else if (value instanceof EmailResource) {
+        this.addSendEmailBinding(config, bindingName, value);
+      } else if (value instanceof TailWorkerResource) {
+        // A tail worker is not a runtime binding — there is no env
+        // accessor for tail consumers, so the binding key is ignored.
+        logger.warn(
+          `Tail worker "${value.name}" was passed in a bindings map; ` +
+            `prefer the worker's \`tailConsumers\` option.`,
+        );
+        if (!config.tail_consumers) config.tail_consumers = [];
+        if (!config.tail_consumers.some((t) => t.service === value.name)) {
+          config.tail_consumers.push({ service: value.name });
+        }
       } else if (value instanceof WorkerResource) {
         // A WorkerResource used directly as a binding is treated as a
         // service binding (equivalent to calling .asService()).
@@ -469,6 +552,128 @@ export class WranglerGenerator {
       binding,
       gateway: { id: resource.options.id },
     };
+  }
+
+  // ── Analytics Engine ─────────────────────────────────────────
+
+  private addAnalyticsEngineBinding(
+    config: WranglerConfig,
+    binding: string,
+    resource: AnalyticsEngineResource,
+  ): void {
+    if (!config.analytics_engine_datasets) config.analytics_engine_datasets = [];
+
+    config.analytics_engine_datasets.push({
+      binding,
+      dataset: resource.options.dataset ?? resource.name,
+    });
+  }
+
+  // ── Browser Rendering ────────────────────────────────────────
+
+  private addBrowserRenderingBinding(
+    config: WranglerConfig,
+    binding: string,
+    _resource: BrowserRenderingResource,
+  ): void {
+    if (config.browser) {
+      logger.warn(
+        `Worker "${this.currentWorkerName}" has multiple Browser Rendering bindings; ` +
+          `only "${binding}" will take effect.`,
+      );
+    }
+    config.browser = { binding };
+  }
+
+  // ── Rate Limiting ────────────────────────────────────────────
+
+  private addRateLimitBinding(
+    config: WranglerConfig,
+    binding: string,
+    resource: RateLimitResource,
+  ): void {
+    if (!config.ratelimits) config.ratelimits = [];
+
+    config.ratelimits.push({
+      name: binding,
+      namespace_id:
+        resource.options.namespaceId ?? deriveRateLimitNamespaceId(resource.name),
+      simple: {
+        limit: resource.options.limit,
+        period: resource.options.period,
+      },
+    });
+  }
+
+  // ── Secrets Store ────────────────────────────────────────────
+
+  private addSecretsStoreSecretBinding(
+    config: WranglerConfig,
+    binding: string,
+    resource: SecretsStoreSecretResource,
+  ): void {
+    if (!config.secrets_store_secrets) config.secrets_store_secrets = [];
+
+    config.secrets_store_secrets.push({
+      binding,
+      // Patched by `levi provision` when unset (like D1 database_id)
+      store_id: resource.options.storeId as string,
+      secret_name: resource.options.secretName ?? resource.name,
+    });
+  }
+
+  // ── Dispatch Namespace (Workers for Platforms) ───────────────
+
+  private addDispatchNamespaceBinding(
+    config: WranglerConfig,
+    binding: string,
+    resource: DispatchNamespaceResource,
+  ): void {
+    if (!config.dispatch_namespaces) config.dispatch_namespaces = [];
+
+    const entry: NonNullable<WranglerConfig["dispatch_namespaces"]>[number] = {
+      binding,
+      namespace: resource.namespaceName,
+    };
+
+    const outbound = resource.options.outbound;
+    if (outbound) {
+      entry.outbound = {
+        service:
+          typeof outbound.service === "string"
+            ? outbound.service
+            : outbound.service.name,
+      };
+      if (outbound.parameters) entry.outbound.parameters = outbound.parameters;
+    }
+    if (resource.options.remote !== undefined) entry.remote = resource.options.remote;
+
+    config.dispatch_namespaces.push(entry);
+  }
+
+  // ── Email (send_email) ───────────────────────────────────────
+
+  private addSendEmailBinding(
+    config: WranglerConfig,
+    binding: string,
+    resource: EmailResource,
+  ): void {
+    if (!config.send_email) config.send_email = [];
+
+    const opts = resource.options;
+    const entry: NonNullable<WranglerConfig["send_email"]>[number] = {
+      name: binding,
+    };
+    if (opts.destinationAddress) entry.destination_address = opts.destinationAddress;
+    if (opts.allowedDestinationAddresses) {
+      entry.allowed_destination_addresses = opts.allowedDestinationAddresses;
+    }
+    if (opts.allowedSenderAddresses) {
+      entry.allowed_sender_addresses = opts.allowedSenderAddresses;
+    }
+    if (opts.remote !== undefined) entry.remote = opts.remote;
+
+    config.send_email.push(entry);
   }
 
   // ── Service Binding ──────────────────────────────────────────

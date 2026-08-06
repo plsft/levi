@@ -125,6 +125,40 @@ export async function cfPost<T>(
   return res.result;
 }
 
+export async function cfPut<T>(
+  path: string,
+  auth: CloudflareAuth,
+  body: unknown,
+): Promise<T> {
+  const res = await cfApi<T>("PUT", path, auth, body);
+  return res.result;
+}
+
+/**
+ * PUT a multipart/form-data body (used by the Snippets API, which takes
+ * file parts plus a JSON `metadata` part).
+ */
+export async function cfPutMultipart<T>(
+  path: string,
+  auth: CloudflareAuth,
+  form: FormData,
+): Promise<T> {
+  const url = `${CF_API_BASE}${path}`;
+  const headers = buildHeaders(auth);
+  // Let fetch set the multipart boundary Content-Type itself
+  delete (headers as Record<string, string>)["Content-Type"];
+
+  const response = await fetch(url, { method: "PUT", headers, body: form });
+  const json = (await response.json()) as CloudflareApiResponse<T>;
+
+  if (!json.success) {
+    const errMsg = json.errors.map((e) => `[${e.code}] ${e.message}`).join("; ");
+    throw new Error(`Cloudflare API error: ${errMsg}`);
+  }
+
+  return json.result;
+}
+
 export async function cfPatch<T>(
   path: string,
   auth: CloudflareAuth,

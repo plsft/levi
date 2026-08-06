@@ -50,6 +50,14 @@ export { MTLSResource } from "./resources/mtls.js";
 export { SecretResource } from "./resources/secret.js";
 export { ContainerResource } from "./resources/container.js";
 export { PipelineResource } from "./resources/pipeline.js";
+export { AnalyticsEngineResource } from "./resources/analytics-engine.js";
+export { BrowserRenderingResource } from "./resources/browser-rendering.js";
+export { RateLimitResource } from "./resources/rate-limit.js";
+export { SecretsStoreSecretResource } from "./resources/secrets-store-secret.js";
+export { DispatchNamespaceResource } from "./resources/dispatch-namespace.js";
+export { EmailResource } from "./resources/email.js";
+export { EdgeRuleResource, KIND_TO_PHASE } from "./resources/edge-rule.js";
+export { SnippetResource } from "./resources/snippet.js";
 
 // ── Frameworks ─────────────────────────────────────────────────
 export {
@@ -135,6 +143,31 @@ export type {
   ContainerOptions,
   ContainerInstanceType,
   PipelineOptions,
+
+  // Observability & Platform
+  AnalyticsEngineOptions,
+  BrowserRenderingOptions,
+  RateLimitOptions,
+  SecretsStoreSecretOptions,
+  DispatchNamespaceOptions,
+  DispatchNamespaceOutbound,
+  EmailOptions,
+
+  // Edge Rules & Snippets
+  EdgeRuleKind,
+  RulesetPhase,
+  MatchSugar,
+  RedirectRuleOptions,
+  CacheRuleOptions,
+  CacheTtl,
+  WAFRuleOptions,
+  RateLimitRuleOptions,
+  HeaderOp,
+  HeaderRuleOptions,
+  SnippetOptions,
+  ZoneRulesManifest,
+  ManifestRule,
+  ManifestSnippet,
 
   // Build & Config
   BuildResult,
