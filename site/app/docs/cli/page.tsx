@@ -108,7 +108,7 @@ export default function CLIReferencePage() {
         <FlagTable
           flags={[
             { flag: "--template", alias: "-t", desc: "Starter template to use", default: "minimal" },
-            { flag: "--framework", alias: "-f", desc: "Frontend framework (vinext, tanstack, hono, raw)", default: "prompt" },
+            { flag: "--framework", alias: "-f", desc: "Project flavor (tanstack, hono, raw)", default: "prompt" },
             { flag: "--package-manager", alias: "-p", desc: "npm, pnpm, yarn, or bun", default: "auto-detect" },
             { flag: "--git", desc: "Initialize a git repository", default: "true" },
             { flag: "--install", desc: "Install dependencies after scaffold", default: "true" },
@@ -122,28 +122,30 @@ export default function CLIReferencePage() {
         </p>
         <ul>
           <li>
-            <strong>vinext</strong> — Recommended. Scaffolds a Vite + React 19 SSR frontend with
-            Cloudflare Workers support, plus a Hono API worker.
-          </li>
-          <li>
-            <strong>TanStack SPA</strong> — Scaffolds a Vite + React + TanStack Query + TanStack Router
-            SPA frontend with a Hono API worker. Pure client-side, no SSR.
+            <strong>TanStack SPA</strong> — Recommended for full-stack apps. Scaffolds a
+            Vite + React 19 + TanStack Query + TanStack Router SPA frontend with a
+            Hono API worker. Plain React, pure client-side.
           </li>
           <li>
             <strong>hono</strong> — Pure API project. Scaffolds only a Hono-based
             worker with no frontend.
           </li>
           <li>
-            <strong>raw</strong> — Plain Worker with no framework.
+            <strong>raw</strong> — Plain Worker with no framework. Pair with your
+            own Vite setup for a{" "}
+            <Link href="/examples/react" className="text-wash-400 hover:text-wash-300">
+              plain React 19 SPA
+            </Link>
+            .
           </li>
         </ul>
 
         <CodeBlock title="Example output" lang="bash">
           <span className="syn-fn">$</span>{" "}
-          <span className="syn-const">levi init my-app --framework vinext</span>
+          <span className="syn-const">levi init my-app --framework tanstack</span>
           {"\n\n"}
           {"  Creating project in ./my-app"}{"\n"}
-          {"  Scaffolding vinext frontend..."}{"\n"}
+          {"  Scaffolding React SPA frontend..."}{"\n"}
           {"  Scaffolding Hono API worker..."}{"\n"}
           {"  Writing levi.app.ts..."}{"\n"}
           {"  Installing dependencies..."}{"\n\n"}
@@ -165,12 +167,11 @@ export default function CLIReferencePage() {
           <span className="syn-cmt"># Hono API worker</span>
           {"\n"}
           {"    web/                "}
-          <span className="syn-cmt"># vinext app (if framework selected)</span>
+          <span className="syn-cmt"># React SPA (if frontend selected)</span>
           {"\n"}
+          {"      main.tsx"}{"\n"}
           {"      app/"}{"\n"}
           {"      components/"}{"\n"}
-          {"      entry.server.tsx"}{"\n"}
-          {"      entry.client.tsx"}{"\n"}
         </CodeBlock>
       </CommandSection>
 
@@ -643,10 +644,10 @@ export default function CLIReferencePage() {
           Core Concepts →
         </Link>
         <Link
-          href="/docs/vinext"
+          href="/examples/react"
           className="px-4 py-2 text-sm bg-denim-800/50 border border-dashed border-denim-600 rounded-md text-denim-200 hover:bg-denim-800/70 transition-colors"
         >
-          vinext Integration →
+          React 19 SPA →
         </Link>
         <Link
           href="/docs/workers"

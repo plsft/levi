@@ -56,9 +56,9 @@ const sections = [
     ],
   },
   {
-    title: "Frameworks",
+    title: "Frontends",
     links: [
-      { href: "/docs/vinext", label: "vinext" },
+      { href: "/examples/react", label: "React 19 SPA" },
       { href: "/docs/tanstack", label: "TanStack SPA" },
     ],
   },

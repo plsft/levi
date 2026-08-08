@@ -127,9 +127,9 @@ export default function GettingStartedPage() {
           <strong>Framework</strong> — Choose one:
           <ul className="mt-2 ml-4">
             <li>
-              <strong>vinext</strong> — React 19 + Vite on
-              Cloudflare Workers with a Next.js-compatible API surface. Full SSR,
-              file-based routing, and server components.
+              <strong>React 19 SPA</strong> — plain React 19 + Vite, no
+              meta-framework. A Worker serves the static build and proxies
+              to your API over a service binding.
             </li>
             <li>
               <strong>TanStack SPA</strong> — Vite + React + TanStack Query +
@@ -443,8 +443,8 @@ export default function GettingStartedPage() {
           work locally.
         </li>
         <li>
-          Hot module replacement works for all supported frameworks (vinext,
-          Hono).
+          Hot module replacement works across the stack (Vite for the
+          frontend, wrangler dev for workers).
         </li>
       </ul>
 
@@ -670,14 +670,14 @@ export default function GettingStartedPage() {
         </Link>
 
         <Link
-          href="/docs/vinext"
+          href="/examples/react"
           className="stitch-border rounded-lg p-4 bg-denim-900/30 hover:bg-denim-900/50 transition-colors no-underline block"
         >
           <h4 className="text-sm font-bold text-wash-400 mb-1">
-            vinext Integration
+            React 19 SPA
           </h4>
           <p className="text-xs text-denim-400 !mb-0">
-            React 19 + Vite on Cloudflare Workers with SSR and RSC.
+            Plain React 19 + Vite on Cloudflare Workers — no meta-framework.
           </p>
         </Link>
 

@@ -25,7 +25,7 @@ Levi is a driver for Wrangler, not a replacement. It never reimplements what Wra
 
 ```bash
 npm install -D @flarefound/levi wrangler
-npx levi init          # scaffold a new project (choose: vinext, hono, raw)
+npx levi init          # scaffold a new project (choose: tanstack, hono, raw)
 npx levi dev           # local development with all bindings
 npx levi build         # generate wrangler.jsonc configs to .levi/
 npx levi deploy        # build + deploy in dependency order
@@ -91,13 +91,13 @@ new FlareApp(name: string, options?: AppOptions)
 
 ## All Resource Types
 
-Levi supports 17 Cloudflare resource types. Each is created via a method on `FlareApp` and returns a resource object that can be passed to Worker bindings.
+Levi supports 26 Cloudflare resource types. Each is created via a method on `FlareApp` and returns a resource object that can be passed to Worker bindings.
 
 ### Workers — `app.addWorker(name, options)`
 
 The primary compute unit. Supports three frameworks:
 - `"hono"` — Hono web framework for APIs
-- `"vinext"` — Cloudflare's Vite-based framework for full-stack apps
+- `"tanstack"` — Plain React 19 SPA with TanStack Query + Router (Vite)
 - `"raw"` — No framework, exports fetch handler directly (default)
 
 ```typescript
@@ -117,8 +117,8 @@ const api = app.addWorker("api", {
 
 | Property | Type | Default | Description |
 |---|---|---|---|
-| `framework` | `"hono" \| "vinext" \| "raw"` | `"raw"` | Application framework |
-| `entrypoint` | `string` | **required** | Path to Worker source file (or vinext project directory) |
+| `framework` | `"hono" \| "tanstack" \| "raw"` | `"raw"` | Application framework |
+| `entrypoint` | `string` | **required** | Path to Worker source file (or SPA project directory) |
 | `bindings` | `BindingMap` | — | Resource bindings available as `env.*` at runtime |
 | `routes` | `string[]` | — | URL route patterns (e.g., `["api.example.com/*"]`) |
 | `customDomains` | `string[]` | — | Custom domain names |
@@ -167,29 +167,33 @@ Pattern is a standard cron expression (5 fields, UTC). Examples:
 }
 ```
 
-#### Vinext-Specific Options
+#### React SPA Frontends
 
-When `framework: "vinext"`, additional options are available:
+For a plain React 19 SPA (no meta-framework), use either the `tanstack`
+preset (directory entrypoint; Levi adds SPA assets config and the Vite
+build step) or a `raw` worker with the wrangler escape hatch:
 
 ```typescript
+// Preset: React 19 + TanStack Query/Router
 app.addWorker("web", {
-  framework: "vinext",
-  entrypoint: "./packages/web",     // points to vinext project directory
-  assets: {
-    directory: "dist/client",        // default
-    binding: "ASSETS",               // default
-    htmlHandling: "auto-trailing-slash",
-    notFoundHandling: "single-page-application",
-    runWorkerFirst: false,
-  },
-  server: {
-    ssr: true,                       // default
-    preset: "cloudflare-workers",    // default
-    baseURL: "/",                    // default
-  },
-  assetsCaching: false,              // KV-based asset caching
-  assetsStorage: false,              // R2-based asset storage
+  framework: "tanstack",
+  entrypoint: "./src/web",           // points to the SPA project directory
   bindings: { API: api.asService() },
+});
+
+// Or fully manual: plain React 19 + Vite, raw asset-serving worker
+app.addWorker("web", {
+  framework: "raw",
+  entrypoint: "./src/worker.ts",     // serves ASSETS, proxies /api/* to API
+  build: { command: "vite build" },
+  bindings: { API: api.asService() },
+  wrangler: {
+    assets: {
+      directory: "./dist",
+      binding: "ASSETS",
+      not_found_handling: "single-page-application",
+    },
+  },
 });
 ```
 
@@ -603,7 +607,7 @@ Workers can call other Workers directly with zero network latency using service 
 ```typescript
 const api = app.addWorker("api", { ... });
 const web = app.addWorker("web", {
-  framework: "vinext",
+  framework: "tanstack",
   entrypoint: "./web",
   bindings: {
     API: api.asService(),   // zero-latency RPC to api Worker
@@ -660,7 +664,7 @@ export default {
 };
 ```
 
-### Pattern 2: Full-Stack Web App (vinext + D1)
+### Pattern 2: Full-Stack Web App (React SPA + D1)
 
 ```typescript
 import { FlareApp } from "@flarefound/levi";
@@ -673,7 +677,7 @@ const db = app.addD1("main-db", { migrations: "./migrations" });
 const sessions = app.addKV("sessions");
 
 app.addWorker("web", {
-  framework: "vinext",
+  framework: "tanstack",
   entrypoint: "./src",
   bindings: { DB: db, SESSIONS: sessions },
   routes: ["example.com/*"],
@@ -800,9 +804,9 @@ app.addWorker("job-runner", {
   consumers: [{ queue: jobQueue, maxBatchSize: 10, maxRetries: 3 }],
 });
 
-// Frontend (vinext) with service binding to API
+// Frontend (React 19 SPA) with service binding to API
 app.addWorker("web", {
-  framework: "vinext",
+  framework: "tanstack",
   entrypoint: "./packages/web",
   bindings: {
     API: api.asService(),         // zero-latency RPC
@@ -1124,7 +1128,7 @@ const contentDb = app.addD1("content-db");
 ```typescript
 // WRONG — couples deployment, scaling, and failure domains
 app.addWorker("everything", {
-  framework: "vinext",
+  framework: "tanstack",
   entrypoint: "./src",
   // API routes mixed with frontend
 });
@@ -1136,7 +1140,7 @@ const api = app.addWorker("api", {
   bindings: { DB: db },
 });
 app.addWorker("web", {
-  framework: "vinext",
+  framework: "tanstack",
   entrypoint: "./packages/web",
   bindings: { API: api.asService() },
 });
@@ -1247,7 +1251,7 @@ You can eject from Levi at any time by running `levi eject`, which copies the ge
 
 | Command | Description |
 |---|---|
-| `levi init` | Scaffold new project. Options: `--template vinext\|hono\|raw` |
+| `levi init` | Scaffold new project. Options: `--template tanstack\|hono\|raw` |
 | `levi build` | Generate `wrangler.jsonc` configs to `.levi/` |
 | `levi dev` | Local development with all Workers and bindings |
 | `levi deploy` | Build + deploy all Workers in dependency order |
@@ -1291,17 +1295,17 @@ app.post("/jobs", async (c) => {
 export default app;
 ```
 
-### vinext Workers
+### React SPA Workers (tanstack)
 
-vinext Workers use Cloudflare's Vite-based framework. The entrypoint points to the vinext project directory, and Levi auto-configures SSR, static assets, and `nodejs_compat`:
+TanStack Workers are plain React 19 SPAs. The entrypoint points to the SPA
+project directory, and Levi auto-configures static assets with SPA fallback
+plus the Vite build step. The frontend is pure client-side — it reaches the
+backend through a service-bound API worker:
 
 ```typescript
-// In vinext server routes, access bindings via the platform context
-export async function loader({ context }) {
-  const db = context.cloudflare.env.DB;
-  const users = await db.prepare("SELECT * FROM users").all();
-  return { users: users.results };
-}
+// In the SPA, call the API worker (proxied via the asset worker or same-origin routes)
+const res = await fetch("/api/users");
+const users = await res.json();
 ```
 
 ### Raw Workers
@@ -1377,7 +1381,7 @@ import {
 
 // Types only
 import type {
-  AppOptions, WorkerOptions, VinextWorkerOptions,
+  AppOptions, WorkerOptions,
   D1Options, KVOptions, R2Options, QueueOptions,
   DurableObjectOptions, VectorizeOptions, HyperdriveOptions,
   WorkersAIOptions, AIGatewayOptions, DomainOptions,
@@ -1404,7 +1408,7 @@ import type { ResourceType, Framework } from "@flarefound/levi/types";
 2. **Zero lock-in.** Generated `wrangler.jsonc` files are standalone. Run `levi eject` to leave Levi behind.
 3. **Type safety.** Every resource, option, and binding is fully typed in TypeScript.
 4. **Dependency-aware.** The graph ensures resources are provisioned and deployed in the correct order.
-5. **Framework-agnostic.** Use Hono, vinext, or raw Workers — Levi adapts its config generation to each.
+5. **Framework-agnostic.** Use Hono, plain React 19 (TanStack preset or raw + Vite), or raw Workers — Levi adapts its config generation to each.
 6. **Escape hatch.** The `wrangler` property on WorkerOptions lets you pass arbitrary wrangler.jsonc properties for features Levi doesn't yet model.
 7. **Full-platform coverage.** Levi models Cloudflare layers generalist IaC tools skip: zone edge rules (redirects, cache, WAF, HTTP rate limiting, header transforms, Snippets), Workers for Platforms dispatch namespaces, and Email Routing — all in the same app file. Unlike state-owning IaC (SST, Alchemy, Terraform), Levi keeps no state file; `levi diff` compares against live Cloudflare state directly, and Levi-managed zone rules are ownership-tagged so nothing else on the zone is ever touched.
 
@@ -1426,7 +1430,7 @@ import type { ResourceType, Framework } from "@flarefound/levi/types";
 
 1. **Forgetting `export default app`** — The app file MUST default-export the FlareApp instance.
 2. **Using `new FlareApp()` without a name** — The first argument (app name) is required.
-3. **Setting `framework: "vinext"` with a file entrypoint** — vinext entrypoint should be a directory, not a file.
+3. **Setting `framework: "tanstack"` with a file entrypoint** — the SPA entrypoint should be a directory, not a file.
 4. **Binding a resource to itself** — Resources cannot reference themselves in bindings.
 5. **Using `app.addQueue()` without a consumer** — Queues need a Worker with `consumers` to process messages.
 6. **Declaring Durable Objects without `className`** — The `className` property is required and must match the exported class.

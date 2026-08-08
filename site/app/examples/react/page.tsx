@@ -12,7 +12,7 @@ export default function ReactExamplePage() {
         <p className="text-denim-200 text-lg leading-relaxed max-w-3xl">
           React 19 without a meta-framework. Vite builds the SPA, a tiny Worker serves the static
           assets and proxies /api/* to a Hono API over a zero-latency service binding. Levi has
-          first-class presets for vinext and TanStack; for plain React the worker uses{" "}
+          a first-class preset for TanStack SPA; for plain React the worker uses{" "}
           <code>framework: &quot;raw&quot;</code> plus the wrangler escape hatch for the assets
           config — every option maps to documented wrangler.jsonc fields.
         </p>

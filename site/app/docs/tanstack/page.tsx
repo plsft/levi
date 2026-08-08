@@ -22,9 +22,10 @@ export default function TanStackPage() {
       {/* Why TanStack SPA? */}
       <h2>Why TanStack SPA?</h2>
       <p>
-        TanStack SPA is a pure client-side application framework. Unlike vinext (which does
-        server-side rendering), TanStack SPA ships zero server-rendered HTML — all data fetching
-        happens in the browser via TanStack Query. This makes it ideal for:
+        TanStack SPA is a pure client-side application setup — plain React 19 plus
+        TanStack Query and TanStack Router, no meta-framework and no server-side
+        rendering. All data fetching happens in the browser via TanStack Query.
+        This makes it ideal for:
       </p>
       <ul>
         <li>Apps where SEO is not critical (dashboards, admin panels, internal tools)</li>
@@ -466,48 +467,60 @@ export default function TanStackPage() {
 
       <div className="stitch-separator my-8" />
 
-      {/* vinext vs TanStack */}
-      <h2>vinext vs. TanStack SPA</h2>
+      {/* Plain React vs TanStack */}
+      <h2>Plain React 19 vs. TanStack SPA</h2>
       <p>
-        Choose based on your app&apos;s requirements:
+        Both are plain React 19 on Vite — the difference is how much data-layer
+        machinery you want out of the box:
       </p>
 
       <table className="w-full text-sm mb-6">
         <thead>
           <tr className="border-b border-wash-600">
             <th className="text-left py-2 text-wash-300">Feature</th>
-            <th className="text-left py-2 text-wash-300">vinext</th>
+            <th className="text-left py-2 text-wash-300">Plain React 19</th>
             <th className="text-left py-2 text-wash-300">TanStack SPA</th>
           </tr>
         </thead>
         <tbody>
           <tr className="border-b border-wash-700">
-            <td className="py-2">SSR</td>
-            <td className="py-2 text-green-400">Yes — server-rendered HTML</td>
-            <td className="py-2 text-red-400">No — pure client-side</td>
-          </tr>
-          <tr className="border-b border-wash-700">
-            <td className="py-2">SEO</td>
-            <td className="py-2 text-green-400">Good — pages are server-rendered</td>
-            <td className="py-2 text-red-400">Poor — requires extra config</td>
-          </tr>
-          <tr className="border-b border-wash-700">
-            <td className="py-2">Initial load</td>
-            <td className="py-2 text-green-400">Faster — HTML from server</td>
-            <td className="py-2 text-yellow-400">Slower — JS must download first</td>
+            <td className="py-2">Levi setup</td>
+            <td className="py-2">
+              <code className="inline-code">framework: &quot;raw&quot;</code> + assets escape hatch
+            </td>
+            <td className="py-2">
+              <code className="inline-code">framework: &quot;tanstack&quot;</code> preset
+            </td>
           </tr>
           <tr className="border-b border-wash-700">
             <td className="py-2">Data fetching</td>
-            <td className="py-2">Server components + TanStack Query</td>
-            <td className="py-2">TanStack Query only</td>
+            <td className="py-2">React 19 use() / Actions / useOptimistic</td>
+            <td className="py-2">TanStack Query (caching, retries, invalidation)</td>
+          </tr>
+          <tr className="border-b border-wash-700">
+            <td className="py-2">Routing</td>
+            <td className="py-2">Your choice (react-router, wouter, none)</td>
+            <td className="py-2">TanStack Router (typed routes)</td>
+          </tr>
+          <tr className="border-b border-wash-700">
+            <td className="py-2">Dependencies</td>
+            <td className="py-2 text-green-400">Just react + react-dom</td>
+            <td className="py-2 text-yellow-400">+ TanStack Query & Router</td>
           </tr>
           <tr className="border-b border-wash-700">
             <td className="py-2">Best for</td>
-            <td className="py-2">Content sites, marketing pages, e-commerce</td>
-            <td className="py-2">Dashboards, admin panels, internal tools</td>
+            <td className="py-2">Small apps, full control, minimal deps</td>
+            <td className="py-2">Dashboards, admin panels, data-heavy UIs</td>
           </tr>
         </tbody>
       </table>
+      <p>
+        See the{" "}
+        <Link href="/examples/react" className="text-wash-400 hover:text-wash-300">
+          plain React 19 guestbook example
+        </Link>{" "}
+        for the raw-worker setup.
+      </p>
 
       <div className="stitch-separator my-8" />
 

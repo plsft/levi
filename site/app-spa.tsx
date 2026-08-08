@@ -1,4 +1,4 @@
-import { Routes, Route, useLocation } from "react-router-dom";
+import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { useEffect, lazy, Suspense, Component, ReactNode } from "react";
 import { Navbar } from "./components/Navbar";
 import { Footer } from "./components/Footer";
@@ -56,7 +56,6 @@ const Domains = lazy(() => import("./app/docs/domains/page"));
 const ServiceBindings = lazy(() => import("./app/docs/service-bindings/page"));
 const Environments = lazy(() => import("./app/docs/environments/page"));
 const CLI = lazy(() => import("./app/docs/cli/page"));
-const Vinext = lazy(() => import("./app/docs/vinext/page"));
 const TanStack = lazy(() => import("./app/docs/tanstack/page"));
 const Containers = lazy(() => import("./app/docs/containers/page"));
 const Pipelines = lazy(() => import("./app/docs/pipelines/page"));
@@ -114,7 +113,8 @@ export function App() {
               <Route path="/docs/service-bindings" element={<ServiceBindings />} />
               <Route path="/docs/environments" element={<Environments />} />
               <Route path="/docs/cli" element={<CLI />} />
-              <Route path="/docs/vinext" element={<Vinext />} />
+              {/* vinext docs removed — send stale links to the React 19 story */}
+              <Route path="/docs/vinext" element={<Navigate to="/examples/react" replace />} />
               <Route path="/docs/tanstack" element={<TanStack />} />
               <Route path="/docs/containers" element={<Containers />} />
               <Route path="/docs/pipelines" element={<Pipelines />} />

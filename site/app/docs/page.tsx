@@ -161,18 +161,18 @@ const categories = [
     ],
   },
   {
-    title: "Frameworks",
-    description: "First-class framework integrations",
+    title: "Frontends",
+    description: "Plain React 19 on Cloudflare Workers — no meta-framework",
     cards: [
       {
-        href: "/docs/vinext",
-        title: "vinext (Recommended)",
-        desc: "Vite-native, SSR-ready React framework built for Cloudflare Workers.",
+        href: "/examples/react",
+        title: "React 19 SPA",
+        desc: "Vite + React 19 Actions, useOptimistic, and use() — served by a Worker with a Hono API behind a service binding.",
       },
       {
         href: "/docs/tanstack",
         title: "TanStack SPA",
-        desc: "Vite + React + TanStack Query + TanStack Router. Pure client-side SPA.",
+        desc: "Vite + React 19 + TanStack Query + TanStack Router. Pure client-side SPA.",
       },
     ],
   },

@@ -41,11 +41,7 @@ export default function WorkersPage() {
         </p>
         <ul className="list-disc list-inside text-denim-200 space-y-1 ml-2">
           <li>
-            <strong className="text-wash-300">vinext</strong> — Full-stack React 19
-            + Vite SSR on Workers
-          </li>
-          <li>
-            <strong className="text-wash-300">tanstack</strong> — Vite + React +
+            <strong className="text-wash-300">tanstack</strong> — Vite + React 19 +
             TanStack Query + TanStack Router (pure SPA, no SSR)
           </li>
           <li>
@@ -121,7 +117,7 @@ export default function WorkersPage() {
           how Levi builds and bundles the worker. Each mode adds
           framework-specific configuration to the generated wrangler config.
         </p>
-        <CodeBlock title="vinext framework" lang="typescript">
+        <CodeBlock title="tanstack framework" lang="typescript">
           <span className="syn-const">app</span>
           <span className="syn-punc">.</span>
           <span className="syn-fn">addWorker</span>
@@ -133,13 +129,13 @@ export default function WorkersPage() {
           {"  "}
           <span className="syn-prop">entrypoint</span>
           <span className="syn-punc">:</span>{" "}
-          <span className="syn-str">"./src/app.ts"</span>
+          <span className="syn-str">"./src/web"</span>
           <span className="syn-punc">,</span>
           {"\n"}
           {"  "}
           <span className="syn-prop">framework</span>
           <span className="syn-punc">:</span>{" "}
-          <span className="syn-str">"vinext"</span>
+          <span className="syn-str">"tanstack"</span>
           <span className="syn-punc">,</span>
           {"\n"}
           <span className="syn-punc">{"}"}</span>
@@ -147,7 +143,7 @@ export default function WorkersPage() {
           <span className="syn-punc">;</span>
           {"\n\n"}
           <span className="syn-cmt">
-            {"// Adds site config, assets binding, and Vite SSR build step"}
+            {"// Adds SPA assets config and the Vite build step"}
           </span>
         </CodeBlock>
         <CodeBlock title="hono framework" lang="typescript">
@@ -929,7 +925,7 @@ app.addWorker("api", {
               </tr>
               <tr className="border-b border-denim-800">
                 <td className="py-2 pr-4"><code className="inline-code">framework</code></td>
-                <td className="py-2 pr-4"><code className="inline-code">"vinext" | "hono" | "raw"</code></td>
+                <td className="py-2 pr-4"><code className="inline-code">"hono" | "tanstack" | "raw"</code></td>
                 <td className="py-2 pr-4"><code className="inline-code">"raw"</code></td>
                 <td className="py-2">Framework mode for build and runtime</td>
               </tr>

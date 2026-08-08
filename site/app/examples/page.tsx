@@ -168,16 +168,16 @@ export default function ExamplesPage() {
 
       <div className="stitch-separator my-12" />
 
-      {/* ── Example 2: vinext Full-Stack ── */}
+      {/* ── Example 2: React Full-Stack ── */}
       <section>
         <div className="flex items-center gap-3 mb-2">
           <h2 style={{ marginTop: 0, borderBottom: "none", paddingBottom: 0 }}>
-            vinext Full-Stack App
+            React Full-Stack App
           </h2>
           <span className="red-tab-h">Intermediate</span>
         </div>
         <p>
-          A production-ready full-stack application: vinext SSR frontend, Hono
+          A production-ready full-stack application: React 19 SPA frontend, Hono
           API backend, D1 database, KV for sessions, R2 for file uploads, and
           service bindings connecting front to back. This is a solid
           architecture for most web applications.
@@ -283,7 +283,7 @@ export default function ExamplesPage() {
           <span className="syn-punc">)</span>
           <span className="syn-punc">;</span>
           {"\n\n"}
-          <span className="syn-cmt">{"// ── Frontend (vinext) ──"}</span>
+          <span className="syn-cmt">{"// ── Frontend (React 19 SPA) ──"}</span>
           {"\n"}
           <span className="syn-kw">const</span>{" "}
           <span className="syn-const">web</span>{" "}
@@ -299,7 +299,7 @@ export default function ExamplesPage() {
           {"  "}
           <span className="syn-prop">framework</span>
           <span className="syn-punc">:</span>{" "}
-          <span className="syn-str">"vinext"</span>
+          <span className="syn-str">"tanstack"</span>
           <span className="syn-punc">,</span>
           {"\n"}
           {"  "}
@@ -781,7 +781,7 @@ export default function ExamplesPage() {
           <span className="red-tab-h">Advanced</span>
         </div>
         <p>
-          The full monty: a production SaaS application with a vinext frontend,
+          The full monty: a production SaaS application with a React 19 frontend,
           Hono API, background job runner, D1 database, KV for sessions, R2 for
           file storage, Queues for async processing, Durable Objects for
           real-time collaboration, Workers AI for smart features, Hyperdrive for
@@ -1206,7 +1206,7 @@ export default function ExamplesPage() {
           <span className="syn-punc">;</span>
           {"\n"}
           {"\n"}
-          <span className="syn-cmt">{"// vinext frontend"}</span>
+          <span className="syn-cmt">{"// React 19 SPA frontend"}</span>
           {"\n"}
           <span className="syn-kw">const</span>{" "}
           <span className="syn-const">web</span>{" "}
@@ -1222,7 +1222,7 @@ export default function ExamplesPage() {
           {"  "}
           <span className="syn-prop">framework</span>
           <span className="syn-punc">:</span>{" "}
-          <span className="syn-str">"vinext"</span>
+          <span className="syn-str">"tanstack"</span>
           <span className="syn-punc">,</span>
           {"\n"}
           {"  "}
@@ -1338,7 +1338,7 @@ export default function ExamplesPage() {
             Durable Object binding wired to the API worker
           </li>
           <li>
-            Service binding connecting the vinext frontend to the Hono API
+            Service binding connecting the React frontend to the Hono API
           </li>
           <li>
             DNS records and SSL configuration for both domains

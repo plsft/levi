@@ -1155,27 +1155,13 @@ export default function BestPracticesPage() {
 
       <div className="stitch-separator my-8" />
 
-      {/* ── vinext-Specific Gotchas ────────────────── */}
+      {/* ── Vite-on-Workers Gotchas ──────────────── */}
       <section className="mb-12">
         <h2 className="text-2xl font-bold text-wash-200 mb-4">
-          vinext Deployment Gotchas
+          Vite Deployment Gotchas
         </h2>
 
         <div className="space-y-6">
-          <div className="denim-pocket p-5">
-            <h3 className="text-base font-bold text-denim-100 mb-2"
-                style={{ marginTop: 0, borderBottom: "none", paddingBottom: 0 }}>
-              Do not register the RSC plugin manually
-            </h3>
-            <p className="text-sm text-denim-300 leading-relaxed">
-              vinext auto-registers <code className="inline-code">@vitejs/plugin-rsc</code>{" "}
-              when it detects an <code className="inline-code">app/</code> directory.
-              Adding <code className="inline-code">rsc()</code> in your{" "}
-              <code className="inline-code">vite.config.ts</code> causes{" "}
-              <em>"Duplicate @vitejs/plugin-rsc detected"</em> build failures.
-            </p>
-          </div>
-
           <div className="denim-pocket p-5">
             <h3 className="text-base font-bold text-denim-100 mb-2"
                 style={{ marginTop: 0, borderBottom: "none", paddingBottom: 0 }}>
@@ -1185,34 +1171,6 @@ export default function BestPracticesPage() {
               Always match <code className="inline-code">@vitejs/plugin-react</code>{" "}
               major to your Vite major. Vite 8 {"\u2192"} plugin-react 6.x. Vite 7{" "}
               {"\u2192"} plugin-react 5.x. Mismatches cause ERESOLVE failures.
-            </p>
-          </div>
-
-          <div className="denim-pocket p-5">
-            <h3 className="text-base font-bold text-denim-100 mb-2"
-                style={{ marginTop: 0, borderBottom: "none", paddingBottom: 0 }}>
-              Install all dependencies upfront
-            </h3>
-            <p className="text-sm text-denim-300 leading-relaxed">
-              vinext tries to auto-install missing deps during build. On Windows,
-              these auto-installs fail. Install{" "}
-              <code className="inline-code">react-server-dom-webpack</code>,{" "}
-              <code className="inline-code">@vitejs/plugin-rsc</code>, and{" "}
-              <code className="inline-code">@cloudflare/vite-plugin</code>{" "}
-              explicitly before the first build.
-            </p>
-          </div>
-
-          <div className="denim-pocket p-5">
-            <h3 className="text-base font-bold text-denim-100 mb-2"
-                style={{ marginTop: 0, borderBottom: "none", paddingBottom: 0 }}>
-              Use two-step build + deploy on Windows
-            </h3>
-            <p className="text-sm text-denim-300 leading-relaxed">
-              <code className="inline-code">vinext deploy</code> fails on Windows
-              with ENOENT because it shells out to a bash script. Use{" "}
-              <code className="inline-code">npx vinext build</code> then{" "}
-              <code className="inline-code">npx wrangler deploy</code> instead.
             </p>
           </div>
 

@@ -760,13 +760,13 @@ export default function CoreConceptsPage() {
         {"  "}
         <span className="syn-prop">framework</span>
         <span className="syn-punc">:</span>{" "}
-        <span className="syn-str">"vinext"</span>
+        <span className="syn-str">"tanstack"</span>
         <span className="syn-punc">,</span>
         {"\n"}
         {"  "}
         <span className="syn-prop">entrypoint</span>
         <span className="syn-punc">:</span>{" "}
-        <span className="syn-str">"./src/web/index.ts"</span>
+        <span className="syn-str">"./src/web"</span>
         <span className="syn-punc">,</span>
         {"\n"}
         {"  "}
@@ -816,10 +816,10 @@ export default function CoreConceptsPage() {
           Workers →
         </Link>
         <Link
-          href="/docs/vinext"
+          href="/examples/react"
           className="px-4 py-2 text-sm bg-denim-800/50 border border-dashed border-denim-600 rounded-md text-denim-200 hover:bg-denim-800/70 transition-colors"
         >
-          vinext Integration →
+          React 19 SPA →
         </Link>
       </div>
     </DocLayout>

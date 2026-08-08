@@ -390,7 +390,7 @@ export default function HomePage() {
             One File. Full Stack.
           </h2>
           <p className="text-denim-300 max-w-xl mx-auto">
-            A realistic apphost with a vinext frontend, Hono API, D1, KV, R2,
+            A realistic apphost with a React 19 frontend, Hono API, D1, KV, R2,
             and service bindings — all declared in a single TypeScript file.
           </p>
         </div>
@@ -513,7 +513,7 @@ export default function HomePage() {
                   <span className="syn-punc">)</span>
                   <span className="syn-punc">;</span>
                   {"\n\n"}
-                  <span className="syn-cmt">{"// ── Frontend (vinext) ────────────────────────────"}</span>
+                  <span className="syn-cmt">{"// ── Frontend (React 19 SPA) ──────────────────────"}</span>
                   {"\n"}
                   <span className="syn-const">app</span>
                   <span className="syn-punc">.</span>
@@ -526,13 +526,23 @@ export default function HomePage() {
                   {"  "}
                   <span className="syn-prop">framework</span>
                   <span className="syn-punc">:</span>{" "}
-                  <span className="syn-str">"vinext"</span>
+                  <span className="syn-str">"raw"</span>
                   <span className="syn-punc">,</span>
                   {"\n"}
                   {"  "}
                   <span className="syn-prop">entrypoint</span>
                   <span className="syn-punc">:</span>{" "}
-                  <span className="syn-str">"./apps/web"</span>
+                  <span className="syn-str">"./apps/web/worker.ts"</span>
+                  <span className="syn-punc">,</span>
+                  {"\n"}
+                  {"  "}
+                  <span className="syn-prop">build</span>
+                  <span className="syn-punc">:</span>{" "}
+                  <span className="syn-punc">{"{"}</span>{" "}
+                  <span className="syn-prop">command</span>
+                  <span className="syn-punc">:</span>{" "}
+                  <span className="syn-str">"vite build"</span>{" "}
+                  <span className="syn-punc">{"}"}</span>
                   <span className="syn-punc">,</span>
                   {"\n"}
                   {"  "}
@@ -545,6 +555,24 @@ export default function HomePage() {
                   <span className="syn-punc">.</span>
                   <span className="syn-fn">asService</span>
                   <span className="syn-punc">()</span>{" "}
+                  <span className="syn-punc">{"}"}</span>
+                  <span className="syn-punc">,</span>
+                  {"\n"}
+                  {"  "}
+                  <span className="syn-prop">wrangler</span>
+                  <span className="syn-punc">:</span>{" "}
+                  <span className="syn-punc">{"{"}</span>{" "}
+                  <span className="syn-prop">assets</span>
+                  <span className="syn-punc">:</span>{" "}
+                  <span className="syn-punc">{"{"}</span>{" "}
+                  <span className="syn-prop">directory</span>
+                  <span className="syn-punc">:</span>{" "}
+                  <span className="syn-str">"./dist"</span>
+                  <span className="syn-punc">,</span>{" "}
+                  <span className="syn-prop">binding</span>
+                  <span className="syn-punc">:</span>{" "}
+                  <span className="syn-str">"ASSETS"</span>{" "}
+                  <span className="syn-punc">{"}"}</span>{" "}
                   <span className="syn-punc">{"}"}</span>
                   <span className="syn-punc">,</span>
                   {"\n"}

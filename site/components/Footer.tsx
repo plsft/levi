@@ -52,10 +52,10 @@ export function Footer() {
               </li>
               <li>
                 <Link
-                  href="/docs/vinext"
+                  href="/examples/react"
                   className="text-sm text-denim-400 hover:text-wash-400 transition-colors"
                 >
-                  vinext Integration
+                  React 19 SPA
                 </Link>
               </li>
             </ul>
@@ -153,7 +153,7 @@ export function Footer() {
             . MIT License.
           </p>
           <p className="text-xs text-denim-600">
-            Built with <span className="text-wash-500">vinext</span> &middot;
+            Built with <span className="text-wash-500">React 19</span> &middot;
             Deployed on{" "}
             <span className="text-wash-500">Cloudflare Workers</span>
           </p>

@@ -163,11 +163,11 @@ export default function ServiceBindingsPage() {
 
       <div className="stitch-separator my-8" />
 
-      {/* vinext + API Pattern */}
-      <h2>vinext + API Pattern</h2>
+      {/* React SPA + API Pattern */}
+      <h2>React SPA + API Pattern</h2>
       <p>
         The most common use case for service bindings in Levi is the{" "}
-        <strong>vinext frontend + Hono API</strong> pattern. Your vinext app
+        <strong>React SPA frontend + Hono API</strong> pattern. Your React app
         handles SSR, routing, and static assets, while a separate Hono-based
         worker serves the API. The frontend calls the API through a service
         binding — no public API endpoint required.
@@ -215,7 +215,7 @@ export default function ServiceBindingsPage() {
         <span className="syn-punc">)</span>
         <span className="syn-punc">;</span>
         {"\n\n"}
-        <span className="syn-cmt">{"// vinext frontend worker"}</span>
+        <span className="syn-cmt">{"// React SPA frontend worker"}</span>
         {"\n"}
         <span className="syn-kw">const</span>{" "}
         <span className="syn-const">web</span>{" "}
@@ -231,7 +231,7 @@ export default function ServiceBindingsPage() {
         {"  "}
         <span className="syn-prop">framework</span>
         <span className="syn-punc">:</span>{" "}
-        <span className="syn-str">"vinext"</span>
+        <span className="syn-str">"tanstack"</span>
         <span className="syn-punc">,</span>
         {"\n"}
         {"  "}
@@ -282,7 +282,7 @@ export default function ServiceBindingsPage() {
       {/* Full Example */}
       <h2>Full Example</h2>
       <p>
-        Here is a complete example with a vinext web worker calling a Hono API
+        Here is a complete example with a React web worker calling a Hono API
         via service binding, with shared D1 and KV resources:
       </p>
 
@@ -372,7 +372,7 @@ export default function ServiceBindingsPage() {
         <span className="syn-punc">)</span>
         <span className="syn-punc">;</span>
         {"\n\n"}
-        <span className="syn-cmt">{"// Web worker (vinext)"}</span>
+        <span className="syn-cmt">{"// Web worker (React SPA)"}</span>
         {"\n"}
         <span className="syn-kw">const</span>{" "}
         <span className="syn-const">web</span>{" "}
@@ -388,7 +388,7 @@ export default function ServiceBindingsPage() {
         {"  "}
         <span className="syn-prop">framework</span>
         <span className="syn-punc">:</span>{" "}
-        <span className="syn-str">"vinext"</span>
+        <span className="syn-str">"tanstack"</span>
         <span className="syn-punc">,</span>
         {"\n"}
         {"  "}
@@ -611,10 +611,10 @@ export default function ServiceBindingsPage() {
         </h2>
         <div className="flex flex-wrap gap-3">
           <Link
-            href="/docs/vinext"
+            href="/examples/react"
             className="px-4 py-2 text-sm bg-wash-600/20 border border-dashed border-wash-500 rounded-md text-wash-300 hover:bg-wash-600/30 transition-colors"
           >
-            vinext Integration
+            React 19 SPA
           </Link>
           <Link
             href="/docs/workers"
